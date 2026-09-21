@@ -1,0 +1,11 @@
+// The MVP tools run entirely in the browser, so there are deliberately no models yet.
+// The first model arrives together with the first feature that genuinely needs persistence.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/server/src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@toolora/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Framework-free code shared by the web app and the server (tool registry, SEO helpers, site constants).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
