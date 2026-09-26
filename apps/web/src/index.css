@@ -1,1 +1,92 @@
 @import 'tailwindcss';
+
+/*
+ * Design tokens — the single source of truth for Toolora's look.
+ *
+ * Tailwind's default palette and shadows are cleared on purpose, so a class like `bg-slate-50` or
+ * `text-blue-600` does not exist: components can only use the tokens below. To re-theme, edit here.
+ *
+ * Contrast (WCAG AA): every text/background pair used by the components is >= 4.5:1
+ * (foreground, muted-foreground, primary-foreground on primary, status colours on their -soft tint).
+ * `border-strong` is >= 3:1 on surface, as required for form-control boundaries.
+ */
+@theme {
+  --color-*: initial;
+  --shadow-*: initial;
+
+  /* Surfaces and text */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+  --color-foreground: #0f172a;
+  --color-muted-foreground: #475569;
+  --color-border: #e2e8f0;
+  --color-border-strong: #64748b;
+
+  /* Brand */
+  --color-primary: #0f766e;
+  --color-primary-hover: #115e59;
+  --color-primary-foreground: #ffffff;
+  --color-primary-soft: #f0fdfa;
+  --color-primary-soft-foreground: #115e59;
+
+  /* Keyboard focus ring (see the :focus-visible rule below) */
+  --color-focus: #0d9488;
+
+  /* Status: the saturated colour is for icons/text on the -soft tint of the same status */
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-error: #b91c1c;
+  --color-error-soft: #fef2f2;
+
+  /* Category accents: each pairs an icon colour with its tint */
+  --color-accent-japan: #be123c;
+  --color-accent-japan-soft: #fff1f2;
+  --color-accent-student: #0369a1;
+  --color-accent-student-soft: #f0f9ff;
+  --color-accent-developer: #6d28d9;
+  --color-accent-developer-soft: #f5f3ff;
+  --color-accent-ai: #b45309;
+  --color-accent-ai-soft: #fffbeb;
+
+  /* Typography: system fonts only, so no third-party font requests. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', Meiryo,
+    Roboto, 'Noto Sans JP', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Shape, elevation and layout widths. Spacing keeps Tailwind's 4px scale. */
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-pill: 9999px;
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.06), 0 1px 3px 0 rgb(15 23 42 / 0.08);
+  --shadow-raised: 0 4px 12px -2px rgb(15 23 42 / 0.12);
+  --container-page: 72rem;
+  --container-content: 48rem;
+}
+
+@layer base {
+  html {
+    /* Sticky header is 4rem tall; keeps in-page anchors from hiding under it. */
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  /* One focus style for every interactive element; components must not remove it. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}

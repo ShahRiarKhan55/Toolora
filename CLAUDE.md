@@ -17,13 +17,16 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | Phase | Scope                                           | State |
 | ----- | ----------------------------------------------- | ----- |
 | 0–1   | Analysis, monorepo, tooling, server skeleton    | done  |
-| 2     | Design system + app shell                       | next  |
-| 3     | Tool registry + routing                         |       |
+| 2     | Design system + app shell                       | done  |
+| 3     | Tool registry + routing                         | next  |
 | 4–6   | Japan / Student / Developer tools               |       |
 | 7–8   | Search, SEO foundations                         |       |
 | 9–11  | Full test pass, lint/build, UX/a11y/perf review |       |
 
-The web app is currently a one-page skeleton; **no tools exist yet**. Update this table as phases land.
+The web app is currently the app shell plus a home page; **no tools exist yet** (the home page says so),
+and there is **no router yet** — category/"All Tools" links are anchors to home-page sections
+(`apps/web/src/config/navigation.ts`), which Phase 3 replaces with real routes. The search box on the
+home page is a disabled placeholder until the registry exists. Update this table as phases land.
 
 ## Architecture
 
@@ -84,7 +87,7 @@ git-ignored; see `.env.example`).
 - Reuse components and helpers; do not copy-paste between tools. Prefer the platform/standard library
   over a new dependency. Every new dependency needs a reason (bundle size, maintenance, security).
 - Web: function components, accessible by default (see UI rules), Tailwind utilities + design tokens
-  defined once in the CSS `@theme` (Phase 2). No UI kit, no animation library.
+  defined once in the CSS `@theme` in `apps/web/src/index.css`. No UI kit, no animation library.
 - Server: config validated with zod at startup (`config.ts`); all errors go through `errorHandler`.
 - Write files as UTF-8 **without BOM** and LF line endings (Windows PowerShell 5.1's
   `Set-Content -Encoding utf8` adds a BOM — do not use it for source files).
@@ -156,3 +159,24 @@ Semantic HTML first; every control has a visible label and keyboard access and a
 errors are announced (`role="alert"` / `aria-live`) and tied to inputs; results use `aria-live="polite"`;
 colour contrast meets WCAG AA; touch targets are comfortable; layouts work on mobile, tablet, desktop.
 `eslint-plugin-jsx-a11y` is on — do not disable its rules.
+
+### UI conventions (Phase 2 — the design system)
+
+- **Tokens only.** Tailwind's default palette and shadows are cleared in `index.css`, so `bg-slate-50` or
+  `text-blue-600` do not exist. Use the semantic tokens: `background`, `surface`, `surface-muted`,
+  `foreground`, `muted-foreground`, `border`, `border-strong`, `primary` (+ `-hover`, `-foreground`,
+  `-soft`, `-soft-foreground`), `success`/`warning`/`error` (+ `-soft`), `accent-<category>` (+ `-soft`),
+  `focus`; shape/elevation `rounded-control|card|pill`, `shadow-card|raised`; widths `max-w-page|content`.
+  Need a new colour? Add a token (and check AA contrast); never an arbitrary value like `bg-[#123456]`.
+- **Building blocks** live in `apps/web/src/components/`: `ui/` (Button, ButtonLink, Input, Textarea,
+  Select, Field, Card, Badge, Alert, EmptyState, CopyButton, icons) and `layout/` (SiteLayout, Header,
+  Footer, Container, Section, PageHeader, Breadcrumbs, ToolPageLayout). Reuse them; add a component only
+  when a real tool needs it. Form controls always go through `Field` (label, hint, announced error).
+- **One `<main>`, one `<h1>`.** `SiteLayout` owns `<main id="main">`; pages render inside it. Tool pages
+  are `ToolPageLayout` with the tool as its children; pass `localOnly` only if the tool truly runs in the
+  browser. Heading outline: h1 → h2 sections → h3 cards, no skipped levels.
+- **One focus style**, set globally in `index.css` (`:focus-visible`); never remove it. Interactive
+  targets are at least 44px tall (`sm` buttons are the documented exception). State is never colour-only:
+  pair it with text or an icon. No new animations beyond simple colour transitions.
+- **Category display** (name, description) comes from `CATEGORIES` in `packages/shared`; icons and colours
+  from `apps/web/src/config/categoryPresentation.ts`. This is site structure, not the tool registry.

@@ -5,9 +5,10 @@ Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grou
 **Developer** (JSON, Base64, UUID, timestamps). Tools run in your browser, so your input is not sent
 anywhere.
 
-> **Status: early development (Phase 1 of 11).** The repository contains the monorepo, tooling, a
-> minimal web skeleton and a working API skeleton. **No tools are implemented yet.** See the status table
-> in [`CLAUDE.md`](./CLAUDE.md).
+> **Status: early development (Phase 2 of 11).** The repository contains the monorepo, tooling, the design
+> system and app shell (header, footer, home page, reusable UI components, tool page layout) and a
+> working API skeleton. **No tools are implemented yet.** See the status table in
+> [`CLAUDE.md`](./CLAUDE.md).
 
 ## Architecture in brief
 

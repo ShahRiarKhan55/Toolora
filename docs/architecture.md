@@ -125,7 +125,49 @@ commands must run from the repo root (they do, via the root npm scripts).
   `X-Request-Id`) — never query strings, headers or bodies.
 - Express 5 forwards rejected promises from async handlers to the error handler automatically.
 
-### 8. Toolchain pins
+### 8. Web app structure and design system _(Phase 2)_
+
+```
+apps/web/src/
+  index.css            design tokens (@theme) + global base styles (focus ring, smooth scroll)
+  App.tsx              SiteLayout > HomePage (single route until Phase 3)
+  components/ui/       Button, ButtonLink, Field, Input, Textarea, Select, Card, Badge, Alert,
+                       EmptyState, CopyButton, icons        (framework-level building blocks)
+  components/layout/   SiteLayout, Header, Footer, Container, Section, PageHeader, Breadcrumbs,
+                       ToolPageLayout
+  components/brand/    Logo (text + inline SVG mark; no image assets)
+  config/              navigation.ts (nav items, link targets), categoryPresentation.ts (icon/colour)
+  pages/home/          HomePage and its sections
+  lib/cx.ts            class-name joiner (instead of a clsx dependency)
+```
+
+Decisions and why:
+
+- **Tokens are the only palette.** `index.css` clears Tailwind's default colours and shadows
+  (`--color-*: initial`) and defines semantic tokens instead. Components can therefore not reach for an
+  arbitrary colour, and a re-theme is a one-file change. Text/background pairs were chosen for WCAG AA;
+  form-control borders use a darker `border-strong` to reach 3:1. There is no dark mode yet.
+- **No router yet.** The project had none, and choosing one is a Phase 3 concern (it needs the registry's
+  routes). Until then, category and "All Tools" links are plain anchors to sections of the home page,
+  built by `config/navigation.ts`; the only page is the home page. When routing lands, change those
+  helpers and (if the router needs it) the anchor elements in `Header`/`Footer`/`Breadcrumbs`.
+- **Categories in `shared`, presentation in `web`.** `CATEGORIES`/`CategoryId` (name, description) are
+  site structure both apps may need (nav, SEO, the registry's `ToolMeta.category`); icons and colours are
+  UI-only and stay in `apps/web`. This is _not_ the tool registry.
+- **Mobile navigation is a disclosure, not a modal.** A "Menu" button with `aria-expanded`/`aria-controls`
+  toggles an inline panel; Escape (returning focus to the button), choosing a link, or pressing outside
+  closes it. Page scrolling is never locked, and no focus trap is needed.
+- **`Field` wires accessibility once.** Input/Textarea/Select render through `Field`, which binds the
+  label, hint and error (`aria-describedby`, `aria-invalid`, an announced `role="alert"` error with an
+  icon) so tools cannot forget it.
+- **Home-page search is a disabled placeholder** that says why. A working search needs the registry
+  (Phase 7 builds it over the registry); a fake one is against the project's rules.
+- **SEO of the home page.** `index.html` carries the title, description, theme colour, favicon and basic
+  Open Graph tags. A canonical URL and `og:url`/`og:image` are deliberately absent: they need the
+  production origin, which does not exist yet. Phase 8's server-side injection adds them; nothing
+  about that design changed.
+
+### 9. Toolchain pins
 
 See `CLAUDE.md` → "Pinned toolchain choices" for TypeScript 6 (not 7), Prisma 7.10 (not the 8.0 RC on
 `latest`) and ESLint 10 with a jsx-a11y peer override, and why.
@@ -140,5 +182,5 @@ See `CLAUDE.md` → "Pinned toolchain choices" for TypeScript 6 (not 7), Prisma 
 ## Performance approach
 
 Route-level and tool-level code splitting; no UI kit; Tailwind emits only used classes; no third-party
-network requests; all tool work is local computation. Current baseline: web bundle ≈ 69 kB gzip
-(React 19 only), server bundle ≈ 9 kB (plus external dependencies).
+network requests; all tool work is local computation. Current baseline (Phase 2): web JS ≈ 73 kB gzip
+(React 19 + the app shell), CSS ≈ 5 kB gzip, server bundle ≈ 9 kB (plus external dependencies).
