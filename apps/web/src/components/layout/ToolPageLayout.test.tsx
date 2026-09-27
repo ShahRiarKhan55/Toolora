@@ -1,3 +1,4 @@
+import { TOOLS } from '@toolora/shared';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -106,5 +107,30 @@ describe('ToolPageLayout', () => {
 
     renderLayout({ localOnly: true });
     expect(screen.getByText(/runs in your browser/i)).toBeInTheDocument();
+  });
+
+  it('renders no related-tools section when none are given', () => {
+    renderLayout();
+    expect(screen.queryByRole('heading', { name: 'Related tools' })).not.toBeInTheDocument();
+  });
+
+  it('renders no related-tools section for an empty list', () => {
+    renderLayout({ relatedTools: [] });
+    expect(screen.queryByRole('heading', { name: 'Related tools' })).not.toBeInTheDocument();
+  });
+
+  it('renders each related tool as a link to its own page', () => {
+    const related = TOOLS.slice(0, 3);
+    renderLayout({ relatedTools: related });
+
+    const section = within(
+      screen.getByRole('heading', { name: 'Related tools' }).closest('section')!,
+    );
+    for (const tool of related) {
+      expect(section.getByRole('link', { name: tool.name })).toHaveAttribute(
+        'href',
+        `/tools/${tool.slug}`,
+      );
+    }
   });
 });

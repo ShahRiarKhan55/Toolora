@@ -1,7 +1,8 @@
-import { CATEGORIES, categoryRoute } from '@toolora/shared';
+import { CATEGORIES, categoryRoute, TOOLS } from '@toolora/shared';
 import type { ToolMeta } from '@toolora/shared';
 import { Suspense } from 'react';
 import { ToolPageLayout } from '../../components/layout/ToolPageLayout';
+import { getRelatedTools } from '../../lib/relatedTools';
 import { useDocumentMeta } from '../../lib/useDocumentMeta';
 import { TOOL_IMPLEMENTATIONS } from '../../tools';
 
@@ -26,6 +27,7 @@ export function ToolPage({ tool }: { tool: ToolMeta }) {
       howToUse={implementation.content.howToUse}
       about={implementation.content.about}
       faq={implementation.content.faq}
+      relatedTools={getRelatedTools(TOOLS, tool)}
     >
       <Suspense fallback={<p role="status">Loading tool…</p>}>
         <Component />

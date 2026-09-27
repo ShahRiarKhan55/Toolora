@@ -99,6 +99,29 @@ backend, no third-party service. It matches a tool's name, description, category
 The "All tools" page (`/tools?q=...`) is the primary search surface; the home page's hero search box
 submits into it.
 
+`/tools` also takes an optional `?category=<id>` param, applied on top of the search filter (a chip
+per category, plus "All categories"). Both params are ordinary `useSearchParams` state, so browser
+back/forward and reload behave naturally with no extra code; either can appear alone or combined
+(`/tools?category=japan&q=age`). An unrecognised `category` value is treated as "all categories"
+rather than erroring or showing nothing.
+
+## Related tools _(Phase 4)_
+
+`apps/web/src/lib/relatedTools.ts` exports `getRelatedTools(tools, current, limit = 3)`, used by
+`ToolPage` to fill `ToolPageLayout`'s "Related tools" section. It is deterministic and reads only
+the registry — there is no second, manually maintained list of tool relationships:
+
+1. Exclude `current`.
+2. Same-category tools first, then every other tool, each group sorted by the registry's `order`
+   field (not array position) as the tie-breaker.
+3. Take the first `limit` (default 3).
+
+Because the result is always a subset of the `tools` array passed in, it can never surface a tool
+that isn't actually registered.
+
+Category pages also cross-link to every other category ("Browse other categories"), and show a
+visible tool count, so a reader is never stuck without a way to the rest of the site.
+
 ## SEO (current state)
 
 Every tool and category page calls `useDocumentMeta` (`apps/web/src/lib/useDocumentMeta.ts`) to set

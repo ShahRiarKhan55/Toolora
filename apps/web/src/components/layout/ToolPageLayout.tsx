@@ -1,5 +1,7 @@
+import type { ToolMeta } from '@toolora/shared';
 import { useId } from 'react';
 import type { ReactNode } from 'react';
+import { ToolCard } from '../tool/ToolCard';
 import { Card } from '../ui/Card';
 import { ChevronDownIcon, ShieldIcon } from '../ui/icons';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -23,6 +25,11 @@ interface ToolPageLayoutProps {
   howToUse?: ReactNode;
   about?: ReactNode;
   faq?: readonly FaqItem[];
+  /**
+   * A small set of other tools to suggest next, in display order. Computed from the registry by
+   * the caller (see `lib/relatedTools.ts`) — this component just renders whatever it is given.
+   */
+  relatedTools?: readonly ToolMeta[];
 }
 
 // Tools supply plain <p>/<ol>/<ul>/<a> content; this gives it consistent spacing and list styles.
@@ -55,6 +62,7 @@ export function ToolPageLayout({
   howToUse,
   about,
   faq,
+  relatedTools,
 }: ToolPageLayoutProps) {
   return (
     <Container className="py-8 sm:py-12">
@@ -99,6 +107,20 @@ export function ToolPageLayout({
               </div>
             </ContentSection>
           )}
+        </div>
+      )}
+
+      {relatedTools && relatedTools.length > 0 && (
+        <div className="mt-12 max-w-content">
+          <ContentSection title="Related tools">
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedTools.map((tool) => (
+                <li key={tool.id}>
+                  <ToolCard tool={tool} />
+                </li>
+              ))}
+            </ul>
+          </ContentSection>
         </div>
       )}
     </Container>

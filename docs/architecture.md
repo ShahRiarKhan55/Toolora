@@ -94,13 +94,24 @@ plainly (CLAUDE.md's "no disabled 'coming soon' tools" rule) — extend the type
 shows up, rather than pre-building for a "later" that would let the registry describe tools that don't
 work yet.
 
-### 4. Search _(Phase 3)_
+### 4. Search _(Phase 3, category filter added in Phase 4)_
 
 `apps/web/src/lib/searchTools.ts`: client-side, case-insensitive substring match over the registry's
 name, description, category name and keywords. No search service, no server round-trip, no dependency
 (kana/width normalisation and ranking are not implemented — the catalogue is small enough that a plain
 filter is enough). The "All tools" page (`/tools?q=...`) is the primary surface; the home page's hero
-search box submits into it. Adding a tool to the registry adds it to search automatically.
+search box submits into it. Adding a tool to the registry adds it to search automatically. Phase 4
+added an optional `?category=` param, applied after the text filter, with a chip per category — both
+params live in `useSearchParams`, so back/forward and reload work for free.
+
+### 4a. Related tools _(Phase 4)_
+
+`apps/web/src/lib/relatedTools.ts` derives a small, deterministic set of "related tools" for a tool
+page straight from `TOOLS`: same category first, then other categories, each tie-broken by the
+registry's `order` field, always excluding the current tool. `ToolPageLayout` renders whatever it is
+given (via `ToolCard`, the same card used everywhere else) — it has no opinion on the algorithm. There
+is deliberately no second, hand-maintained "related tools" map: doing that risks drifting out of sync
+with the registry and pointing at a tool that no longer exists.
 
 ### 5. SEO strategy _(planned, Phase 8)_
 
@@ -156,8 +167,9 @@ apps/web/src/
   pages/NotFoundPage.tsx
   tools/<tool-id>/     one folder per tool: logic.ts, <Name>Tool.tsx, content.tsx, tests (docs/tools.md)
   tools/index.ts       registry id → { lazy Component, content }; tools/types.ts; tools/registry.test.ts
-  lib/                 cx.ts (class-name joiner), searchTools.ts, useDocumentMeta.ts, isoDate.ts,
-                       parseDecimal.ts — small helpers shared across tools instead of copy-pasted
+  lib/                 cx.ts (class-name joiner), searchTools.ts, relatedTools.ts, useDocumentMeta.ts,
+                       isoDate.ts, parseDecimal.ts — small helpers shared across tools instead of
+                       copy-pasted
 ```
 
 Decisions and why:

@@ -14,17 +14,22 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 
 ## Status
 
-| Phase | Scope                                                       | State |
-| ----- | ----------------------------------------------------------- | ----- |
-| 0–1   | Analysis, monorepo, tooling, server skeleton                | done  |
-| 2     | Design system + app shell                                   | done  |
-| 3     | Tool registry, routing, first 10 tools, client-side search  | done  |
-| 8     | Server-side SEO injection (per-route tags), sitemap, robots | next  |
-| 9–11  | Full test pass, lint/build, UX/a11y/perf review             |       |
+| Phase | Scope                                                                        | State |
+| ----- | ---------------------------------------------------------------------------- | ----- |
+| 0–1   | Analysis, monorepo, tooling, server skeleton                                 | done  |
+| 2     | Design system + app shell                                                    | done  |
+| 3     | Tool registry, routing, first 10 tools, client-side search                   | done  |
+| 4     | Product quality: related tools, category filter/discovery, content/a11y pass | done  |
+| 8     | Server-side SEO injection (per-route tags), sitemap, robots                  | next  |
+| 9–11  | Full test pass, lint/build, UX/a11y/perf review                              |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
-stale — see `docs/tools.md` for what actually landed. Update this table as phases land.
+stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, later product-quality pass
+(not part of that original 3–7 merge): a deterministic related-tools system, category filtering on
+`/tools`, category cross-links, a heading-outline fix on the empty states, and expanded navigation/
+accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
+phases land.
 
 The app now has real routes (`react-router-dom`), a working tool registry with all 10 MVP tools, and a
 client-side search over it (`apps/web/src/lib/searchTools.ts`). What's still outstanding: server-side

@@ -1,28 +1,69 @@
-import { SITE_NAME, TOOLS } from '@toolora/shared';
+import { CATEGORIES, getToolsByCategory, SITE_NAME, TOOLS } from '@toolora/shared';
+import type { CategoryId } from '@toolora/shared';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import { Container } from '../../components/layout/Container';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { ToolCard } from '../../components/tool/ToolCard';
+import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Input } from '../../components/ui/Input';
 import { SearchIcon } from '../../components/ui/icons';
 import { searchTools } from '../../lib/searchTools';
 import { useDocumentMeta } from '../../lib/useDocumentMeta';
 
+function isCategoryId(value: string | null): value is CategoryId {
+  return value !== null && CATEGORIES.some((category) => category.id === value);
+}
+
+/** "Japan, Student and Developer" — derived from the registry, never a hardcoded string. */
+function categoryListText(): string {
+  const names = CATEGORIES.filter((category) => getToolsByCategory(category.id).length > 0).map(
+    (category) => category.name,
+  );
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
 export function AllToolsPage() {
   useDocumentMeta(
     `All Tools — ${SITE_NAME}`,
-    'Browse every Toolora tool: Japan, Student and Developer utilities that run entirely in your browser.',
+    `Browse every Toolora tool: ${categoryListText()} utilities that run entirely in your browser.`,
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') ?? '';
-  const results = useMemo(() => searchTools(TOOLS, query), [query]);
+  const categoryParam = searchParams.get('category');
+  const activeCategory = isCategoryId(categoryParam) ? categoryParam : null;
+
+  const results = useMemo(() => {
+    const matches = searchTools(TOOLS, query);
+    return activeCategory ? matches.filter((tool) => tool.category === activeCategory) : matches;
+  }, [query, activeCategory]);
 
   function handleQueryChange(value: string) {
-    setSearchParams(value === '' ? {} : { q: value }, { replace: true });
+    const next = new URLSearchParams(searchParams);
+    if (value === '') {
+      next.delete('q');
+    } else {
+      next.set('q', value);
+    }
+    setSearchParams(next, { replace: true });
+  }
+
+  function handleCategoryChange(categoryId: CategoryId | null) {
+    const next = new URLSearchParams(searchParams);
+    if (categoryId) {
+      next.set('category', categoryId);
+    } else {
+      next.delete('category');
+    }
+    setSearchParams(next, { replace: true });
+  }
+
+  function clearFilters() {
+    setSearchParams({}, { replace: true });
   }
 
   return (
@@ -30,7 +71,7 @@ export function AllToolsPage() {
       <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'All Tools' }]} />
       <PageHeader
         title="All Tools"
-        description={`${TOOLS.length} tools across Japan, Student and Developer categories, all free and running in your browser.`}
+        description={`${TOOLS.length} tools across ${categoryListText()} categories, all free and running in your browser.`}
         className="mt-4"
       />
 
@@ -42,6 +83,28 @@ export function AllToolsPage() {
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Search by name, category or keyword…"
         />
+      </div>
+
+      <div role="group" aria-label="Filter by category" className="mt-4 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant={activeCategory === null ? 'primary' : 'secondary'}
+          aria-pressed={activeCategory === null}
+          onClick={() => handleCategoryChange(null)}
+        >
+          All categories
+        </Button>
+        {CATEGORIES.map((category) => (
+          <Button
+            key={category.id}
+            size="sm"
+            variant={activeCategory === category.id ? 'primary' : 'secondary'}
+            aria-pressed={activeCategory === category.id}
+            onClick={() => handleCategoryChange(category.id)}
+          >
+            {category.name}
+          </Button>
+        ))}
       </div>
 
       <div className="mt-8">
@@ -59,8 +122,17 @@ export function AllToolsPage() {
             </ul>
           </>
         ) : (
-          <EmptyState icon={<SearchIcon className="size-6" />} title="No tools match your search">
-            Try a different word, or clear the search to see every tool.
+          <EmptyState
+            as="h2"
+            icon={<SearchIcon className="size-6" />}
+            title="No tools match your search"
+            action={
+              <Button variant="secondary" onClick={clearFilters}>
+                Clear search and filters
+              </Button>
+            }
+          >
+            Try a different word, or clear the search and category filter to see every tool.
           </EmptyState>
         )}
       </div>
