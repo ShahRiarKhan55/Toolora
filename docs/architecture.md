@@ -62,34 +62,45 @@ packages external. Trade-off: shared code must stay simple, framework-free TypeS
 Each tool folder owns its pure `logic.ts`, so tools stay independent modules. Only data needed by both
 apps (registry metadata) goes in `shared`. This keeps the server from ever importing tool logic.
 
-### 3. Tool registry _(planned, Phase 3)_
+### 3. Tool registry _(Phase 3)_
 
-One typed array in `packages/shared`, entries shaped like:
+One typed array, `TOOLS`, in `packages/shared/src/tools.ts`:
 
 ```ts
 interface ToolMeta {
   id: string; // unique, kebab-case; equals the folder name in apps/web/src/tools/
-  slug: string; // URL segment → /tools/<category>/<slug>
+  slug: string; // URL segment → /tools/<slug> (flat, not nested under the category)
   name: string;
-  description: string; // ≤ ~160 chars; used for cards and the meta description
+  description: string; // card text
   category: 'japan' | 'student' | 'developer' | 'ai';
-  icon: string; // identifier resolved by the web icon map
-  keywords: string[]; // search synonyms ("jpy", "gpa", "epoch", …)
-  order?: number; // manual ordering
-  featured?: boolean; // homepage "recommended"
+  icon: ToolIconId; // identifier resolved by apps/web/src/config/toolPresentation.ts
+  keywords: readonly string[]; // search synonyms ("jpy", "gpa", "epoch", …)
+  seoTitle: string;
+  seoDescription: string;
+  localOnly: boolean; // true for every current tool
+  order: number; // manual ordering within a category and in "All tools"
 }
 ```
 
-The route is **derived** by a helper, not stored, so it cannot drift from category/slug. The web app maps
-`id` → lazily-loaded component (`import.meta.glob` over `tools/*`); a unit test fails if a registry entry
-has no component or a component has no entry. Cards, category pages, search, sitemap and SEO tags all read
-this one list.
+The route is **derived** by a helper (`toolRoute`/`categoryRoute`), not stored, so it cannot drift from
+the slug/category id. `apps/web/src/tools/index.ts` maps `id` → a lazily-loaded component (a hand-written
+map of ten `import()` calls, not `import.meta.glob` — simple enough not to need the extra indirection at
+this scale) plus its `content`; `registry.test.ts` fails if a registry entry has no implementation or an
+implementation has no entry. Cards, category pages, search and per-route document title/description all
+read this one list; the sitemap and server-injected SEO tags are Phase 8.
 
-### 4. Search _(planned, Phase 7)_
+Deliberately _not_ in `ToolMeta`: a `featured` or `status` flag. Every MVP tool is fully built and listed
+plainly (CLAUDE.md's "no disabled 'coming soon' tools" rule) — extend the type when a real need for either
+shows up, rather than pre-building for a "later" that would let the registry describe tools that don't
+work yet.
 
-Client-side, over the registry: normalise (case, whitespace, kana/width where useful), match against name,
-keywords and description with simple ranking. No search service, no server round-trip, no dependency.
-Adding a tool to the registry adds it to search automatically.
+### 4. Search _(Phase 3)_
+
+`apps/web/src/lib/searchTools.ts`: client-side, case-insensitive substring match over the registry's
+name, description, category name and keywords. No search service, no server round-trip, no dependency
+(kana/width normalisation and ranking are not implemented — the catalogue is small enough that a plain
+filter is enough). The "All tools" page (`/tools?q=...`) is the primary surface; the home page's hero
+search box submits into it. Adding a tool to the registry adds it to search automatically.
 
 ### 5. SEO strategy _(planned, Phase 8)_
 
@@ -125,20 +136,28 @@ commands must run from the repo root (they do, via the root npm scripts).
   `X-Request-Id`) — never query strings, headers or bodies.
 - Express 5 forwards rejected promises from async handlers to the error handler automatically.
 
-### 8. Web app structure and design system _(Phase 2)_
+### 8. Web app structure and design system _(Phase 2, extended in Phase 3)_
 
 ```
 apps/web/src/
   index.css            design tokens (@theme) + global base styles (focus ring, smooth scroll)
-  App.tsx              SiteLayout > HomePage (single route until Phase 3)
+  App.tsx              SiteLayout > react-router <Routes> (see docs/tools.md for the route list)
+  main.tsx             BrowserRouter > App
   components/ui/       Button, ButtonLink, Field, Input, Textarea, Select, Card, Badge, Alert,
-                       EmptyState, CopyButton, icons        (framework-level building blocks)
+                       EmptyState, CopyButton, ResultBox, icons  (framework-level building blocks)
   components/layout/   SiteLayout, Header, Footer, Container, Section, PageHeader, Breadcrumbs,
                        ToolPageLayout
   components/brand/    Logo (text + inline SVG mark; no image assets)
-  config/              navigation.ts (nav items, link targets), categoryPresentation.ts (icon/colour)
+  components/tool/     ToolCard (the tool summary card used by home, "All tools" and category pages)
+  config/              navigation.ts, categoryPresentation.ts, toolPresentation.ts (icon/colour per
+                       tool, keyed by ToolIconId so a new id is a compile error until it is styled)
   pages/home/          HomePage and its sections
-  lib/cx.ts            class-name joiner (instead of a clsx dependency)
+  pages/tools/         AllToolsPage, CategoryPage, ToolPage, ToolsSlugRoute
+  pages/NotFoundPage.tsx
+  tools/<tool-id>/     one folder per tool: logic.ts, <Name>Tool.tsx, content.tsx, tests (docs/tools.md)
+  tools/index.ts       registry id → { lazy Component, content }; tools/types.ts; tools/registry.test.ts
+  lib/                 cx.ts (class-name joiner), searchTools.ts, useDocumentMeta.ts, isoDate.ts,
+                       parseDecimal.ts — small helpers shared across tools instead of copy-pasted
 ```
 
 Decisions and why:
@@ -147,10 +166,12 @@ Decisions and why:
   (`--color-*: initial`) and defines semantic tokens instead. Components can therefore not reach for an
   arbitrary colour, and a re-theme is a one-file change. Text/background pairs were chosen for WCAG AA;
   form-control borders use a darker `border-strong` to reach 3:1. There is no dark mode yet.
-- **No router yet.** The project had none, and choosing one is a Phase 3 concern (it needs the registry's
-  routes). Until then, category and "All Tools" links are plain anchors to sections of the home page,
-  built by `config/navigation.ts`; the only page is the home page. When routing lands, change those
-  helpers and (if the router needs it) the anchor elements in `Header`/`Footer`/`Breadcrumbs`.
+- **Routing: `react-router-dom` (Phase 3).** The simplest well-maintained option for a client-rendered
+  SPA; no server rendering or loader/data APIs are used. `ToolsSlugRoute` resolves `/tools/:param`
+  against the category list, then the registry, so category pages and tool pages share one route
+  without a hand-written list per category. `Header`/`Footer`/`Breadcrumbs`/`Logo`/`ButtonLink` render
+  `<Link>` (client-side navigation); `ButtonLink`'s public prop stayed named `href` for continuity even
+  though it now forwards to `<Link to>` internally.
 - **Categories in `shared`, presentation in `web`.** `CATEGORIES`/`CategoryId` (name, description) are
   site structure both apps may need (nav, SEO, the registry's `ToolMeta.category`); icons and colours are
   UI-only and stay in `apps/web`. This is _not_ the tool registry.
@@ -160,12 +181,14 @@ Decisions and why:
 - **`Field` wires accessibility once.** Input/Textarea/Select render through `Field`, which binds the
   label, hint and error (`aria-describedby`, `aria-invalid`, an announced `role="alert"` error with an
   icon) so tools cannot forget it.
-- **Home-page search is a disabled placeholder** that says why. A working search needs the registry
-  (Phase 7 builds it over the registry); a fake one is against the project's rules.
+- **The home-page search box is a real search (Phase 3).** It submits to `/tools?q=...`, which filters
+  with `searchTools` (see "Search" above) — no longer the disabled Phase 2 placeholder, now that the
+  registry and a working search exist.
 - **SEO of the home page.** `index.html` carries the title, description, theme colour, favicon and basic
   Open Graph tags. A canonical URL and `og:url`/`og:image` are deliberately absent: they need the
   production origin, which does not exist yet. Phase 8's server-side injection adds them; nothing
-  about that design changed.
+  about that design changed. Other routes' `document.title`/description are set client-side by
+  `useDocumentMeta` in the meantime (see "SEO strategy" above).
 
 ### 9. Toolchain pins
 
@@ -175,12 +198,19 @@ See `CLAUDE.md` → "Pinned toolchain choices" for TypeScript 6 (not 7), Prisma 
 ## Testing strategy
 
 - Vitest 5 with `test.projects`: `web` (jsdom), `server` (node), `shared` (node). `npm test` runs all.
-- Pure `logic.ts` gets exhaustive unit tests; UI gets Testing Library tests for the flows users
-  perform; the API is tested through supertest against a real Prisma client on in-memory SQLite.
-- Regression tests are proven to fail without the fix (see the request-path logging test).
+- Pure `logic.ts` gets exhaustive unit tests (normal, edge, invalid, boundary — see CLAUDE.md's
+  per-tool must-haves: leap years/date boundaries, era boundaries, invalid JSON, Unicode Base64,
+  timestamp seconds vs milliseconds, GPA edge cases); UI gets Testing Library tests for the flows
+  users perform (input → action → result, validation, reset, copy); the API is tested through
+  supertest against a real Prisma client on in-memory SQLite; the registry has its own tests
+  (uniqueness, valid categories, non-empty metadata) plus a registry ↔ implementation parity test.
+- Regression tests are proven to fail without the fix (see the request-path logging test, and
+  `japanese-age-calculator/logic.test.ts`'s day-borrow reconstruction test, added after a real bug).
 
 ## Performance approach
 
-Route-level and tool-level code splitting; no UI kit; Tailwind emits only used classes; no third-party
-network requests; all tool work is local computation. Current baseline (Phase 2): web JS ≈ 73 kB gzip
-(React 19 + the app shell), CSS ≈ 5 kB gzip, server bundle ≈ 9 kB (plus external dependencies).
+Route-level and tool-level code splitting (each tool is its own chunk, verified in the Phase 3 build —
+typically 1–5 kB gzip per tool); no UI kit; Tailwind emits only used classes; no third-party network
+requests; all tool work is local computation. Current baseline (Phase 3): main web JS ≈ 96 kB gzip
+(React 19 + React Router + the app shell + registry), CSS ≈ 5 kB gzip, server bundle ≈ 9 kB (plus
+external dependencies).

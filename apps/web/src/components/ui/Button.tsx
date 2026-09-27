@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import { Link } from 'react-router-dom';
 import { cx } from '../../lib/cx';
 
 type Variant = 'primary' | 'secondary' | 'ghost';
@@ -40,17 +41,20 @@ export function Button({
   return <button type={type} className={styles({ variant, size }, className)} {...rest} />;
 }
 
+type LinkProps = ComponentProps<typeof Link>;
+
 /** A link that looks like a Button: use for navigation, since a <button> must never navigate. */
 export function ButtonLink({
   variant,
   size,
   className,
   children,
+  href,
   ...rest
-}: ComponentProps<'a'> & StyleProps) {
+}: Omit<LinkProps, 'to' | 'className'> & StyleProps & { href: string; className?: string }) {
   return (
-    <a className={styles({ variant, size }, className)} {...rest}>
+    <Link to={href} className={styles({ variant, size }, className)} {...rest}>
       {children}
-    </a>
+    </Link>
   );
 }

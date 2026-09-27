@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { cx } from '../../lib/cx';
 
 // Same mark as public/favicon.svg. Text plus inline SVG only: no image assets to load.
@@ -13,8 +14,8 @@ function LogoMark({ className }: { className?: string }) {
 /** The Toolora wordmark, linking to the home page. Its accessible name is "Toolora". */
 export function Logo({ className }: { className?: string }) {
   return (
-    <a
-      href="/"
+    <Link
+      to="/"
       className={cx(
         'inline-flex items-center gap-2.5 rounded-control text-xl font-bold tracking-tight text-foreground',
         className,
@@ -25,6 +26,6 @@ export function Logo({ className }: { className?: string }) {
       <span>
         Tool<span className="text-primary">ora</span>
       </span>
-    </a>
+    </Link>
   );
 }

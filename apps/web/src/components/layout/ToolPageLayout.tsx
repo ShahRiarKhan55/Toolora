@@ -91,7 +91,7 @@ export function ToolPageLayout({
                   <details key={item.question} className="group px-4 py-3">
                     <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold">
                       {item.question}
-                      <ChevronDownIcon className="text-muted-foreground group-open:rotate-180" />
+                      <ChevronDownIcon className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                     </summary>
                     <div className={`pb-2 ${proseStyles}`}>{item.answer}</div>
                   </details>

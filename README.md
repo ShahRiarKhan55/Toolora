@@ -1,24 +1,26 @@
 # Toolora
 
 Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grouped into categories —
-**Japan** (yen converter, era converter, age calculator), **Student** (GPA, percentage, word counter) and
-**Developer** (JSON, Base64, UUID, timestamps). Tools run in your browser, so your input is not sent
-anywhere.
+**Japan** (yen converter, era converter, age calculator), **Student** (GPA, percentage/grade calculator,
+word counter) and **Developer** (JSON formatter, Base64, UUID generator, Unix timestamp converter). All
+10 tools run entirely in your browser, so your input is never sent anywhere.
 
-> **Status: early development (Phase 2 of 11).** The repository contains the monorepo, tooling, the design
-> system and app shell (header, footer, home page, reusable UI components, tool page layout) and a
-> working API skeleton. **No tools are implemented yet.** See the status table in
-> [`CLAUDE.md`](./CLAUDE.md).
+> **Status: early development (Phase 3 of 11).** The repository has the monorepo, tooling, the design
+> system and app shell, a working API skeleton, real routing (`react-router-dom`), a tool registry, and
+> the first 10 tools — all working, tested and searchable at `/tools`. See the status table in
+> [`CLAUDE.md`](./CLAUDE.md) and the registry/routing details in [`docs/tools.md`](./docs/tools.md).
 
 ## Architecture in brief
 
-- **`apps/web`** — React 19 + TypeScript + Vite + Tailwind CSS. All tool logic runs client-side.
+- **`apps/web`** — React 19 + TypeScript + Vite + Tailwind CSS + React Router. All tool logic runs
+  client-side; each tool is its own lazy-loaded chunk.
 - **`apps/server`** — Node.js + Express 5 + TypeScript. Health endpoint today; will also serve the built
-  site with SEO tags, `sitemap.xml` and `robots.txt`. Prisma 7 + SQLite for future persistence.
-- **`packages/shared`** — framework-free TypeScript shared by both (tool registry metadata, SEO helpers).
+  site with SEO tags, `sitemap.xml` and `robots.txt` (Phase 8). Prisma 7 + SQLite for future persistence.
+- **`packages/shared`** — framework-free TypeScript shared by both (the tool registry, categories, SEO
+  helpers).
 - **Tests** — Vitest, React Testing Library, supertest. **Lint/format** — ESLint (with jsx-a11y) + Prettier.
 
-More in [`docs/architecture.md`](./docs/architecture.md).
+More in [`docs/architecture.md`](./docs/architecture.md) and [`docs/tools.md`](./docs/tools.md).
 
 ## Prerequisites
 
@@ -64,22 +66,23 @@ toolora/
 ├─ packages/
 │  └─ shared/         Shared TypeScript source (src/)
 ├─ prisma/            schema.prisma (+ migrations/ once a model exists)
-├─ docs/              architecture.md (tools.md arrives with the registry)
+├─ docs/              architecture.md, tools.md (registry, routing, adding a tool)
 ├─ CLAUDE.md          Working rules for contributors and AI agents
 ├─ eslint.config.js, .prettierrc.json, tsconfig*.json, vitest.config.ts, prisma.config.ts
 └─ package.json       npm workspaces + root scripts
 ```
 
-## Adding a new tool _(available from Phase 3)_
+## Adding a new tool
 
-The tool registry does not exist yet. The intended workflow — documented in detail in `docs/tools.md`
-once implemented — is:
+Full walkthrough: [`docs/tools.md`](./docs/tools.md). Short version:
 
-1. Add one entry (id, slug, name, description, category, icon, keywords) to the registry in `packages/shared`.
-2. Create `apps/web/src/tools/<tool-id>/` with the pure `logic.ts` (+ tests), the UI component built from
-   shared components, and the explanatory content.
-3. `npm run check`. The card, category page, route, search entry, sitemap entry and SEO tags appear
-   automatically.
+1. Add one entry (id, slug, name, description, category, icon, keywords, seoTitle, seoDescription,
+   localOnly, order) to `TOOLS` in `packages/shared/src/tools.ts`.
+2. Create `apps/web/src/tools/<tool-id>/` with the pure `logic.ts` (+ tests first), the UI component
+   built from shared components, and `content.tsx` for the explanatory copy.
+3. Register it in `apps/web/src/tools/index.ts`.
+4. `npm run check`. The card, category page, route (`/tools/<slug>`), search entry and page title/
+   description all appear automatically — the sitemap and server-injected SEO tags land in Phase 8.
 
 ## Testing
 

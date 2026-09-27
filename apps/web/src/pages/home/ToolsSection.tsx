@@ -1,14 +1,28 @@
+import { TOOLS } from '@toolora/shared';
 import { Section } from '../../components/layout/Section';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { SearchIcon } from '../../components/ui/icons';
+import { ToolCard } from '../../components/tool/ToolCard';
+import { ButtonLink } from '../../components/ui/Button';
 
 export function ToolsSection() {
   return (
-    <Section id="tools" title="All tools" tone="muted">
-      <EmptyState icon={<SearchIcon className="size-6" />} title="The first tools are on their way">
-        Toolora does not have any tools yet. The first ones for Japan, students and developers are
-        being built and will appear here as soon as they are ready.
-      </EmptyState>
+    <Section
+      id="tools"
+      title="All tools"
+      description="Every Toolora tool, free and running in your browser."
+      tone="muted"
+    >
+      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {TOOLS.map((tool) => (
+          <li key={tool.id}>
+            <ToolCard tool={tool} />
+          </li>
+        ))}
+      </ul>
+      <div className="mt-8">
+        <ButtonLink href="/tools" variant="secondary">
+          Search all tools
+        </ButtonLink>
+      </div>
     </Section>
   );
 }

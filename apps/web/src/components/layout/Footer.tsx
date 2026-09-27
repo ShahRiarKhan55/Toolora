@@ -1,4 +1,5 @@
 import { SITE_NAME, SITE_TAGLINE } from '@toolora/shared';
+import { Link } from 'react-router-dom';
 import { ALL_TOOLS_HREF, CATEGORY_NAV } from '../../config/navigation';
 import { Logo } from '../brand/Logo';
 import { Container } from './Container';
@@ -22,9 +23,9 @@ export function Footer() {
           <ul className="mt-3 space-y-2">
             {CATEGORY_NAV.map((item) => (
               <li key={item.href}>
-                <a href={item.href} className={linkStyles}>
+                <Link to={item.href} className={linkStyles}>
                   {item.label} Tools
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -33,14 +34,14 @@ export function Footer() {
           <h2 className="text-sm font-semibold">Toolora</h2>
           <ul className="mt-3 space-y-2">
             <li>
-              <a href="/" className={linkStyles}>
+              <Link to="/" className={linkStyles}>
                 Home
-              </a>
+              </Link>
             </li>
             <li>
-              <a href={ALL_TOOLS_HREF} className={linkStyles}>
+              <Link to={ALL_TOOLS_HREF} className={linkStyles}>
                 All Tools
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

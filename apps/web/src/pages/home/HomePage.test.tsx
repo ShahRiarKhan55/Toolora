@@ -1,11 +1,25 @@
-import { CATEGORIES } from '@toolora/shared';
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { CATEGORIES, getToolsByCategory, TOOLS, toolRoute } from '@toolora/shared';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
+import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from './HomePage';
+
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return { ...actual, useNavigate: vi.fn(actual.useNavigate) };
+});
+
+function renderHome() {
+  return render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+}
 
 describe('HomePage', () => {
   it('has one h1 with the hero message', () => {
-    render(<HomePage />);
+    renderHome();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(
       screen.getByRole('heading', { level: 1, name: 'Simple tools for everyday tasks.' }),
@@ -13,50 +27,80 @@ describe('HomePage', () => {
   });
 
   it('shows one card per category, in order, as h3 headings', () => {
-    render(<HomePage />);
+    renderHome();
     const categories = within(screen.getByRole('region', { name: 'Categories' }));
     const headings = categories.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
     expect(headings).toEqual(CATEGORIES.map((category) => `${category.name} Tools`));
   });
 
   it('gives every category card an id that navigation links can target', () => {
-    render(<HomePage />);
+    renderHome();
     for (const category of CATEGORIES) {
       expect(document.getElementById(category.id)).not.toBeNull();
     }
   });
 
-  it('marks AI as coming later and the other categories as coming soon', () => {
-    render(<HomePage />);
+  it("links each category card to that category's page", () => {
+    renderHome();
+    for (const category of CATEGORIES) {
+      expect(screen.getByRole('link', { name: `${category.name} Tools` })).toHaveAttribute(
+        'href',
+        `/tools/${category.id}`,
+      );
+    }
+  });
+
+  it('shows a tool count badge for categories with tools, and "Coming later" for AI', () => {
+    renderHome();
+    for (const category of CATEGORIES.filter((c) => c.id !== 'ai')) {
+      const count = getToolsByCategory(category.id).length;
+      const card = within(screen.getByRole('article', { name: `${category.name} Tools` }));
+      expect(card.getByText(`${count} ${count === 1 ? 'tool' : 'tools'}`)).toBeInTheDocument();
+    }
     const ai = within(screen.getByRole('article', { name: /AI Tools/ }));
     expect(ai.getByText('Coming later')).toBeInTheDocument();
-    expect(screen.getAllByText('Coming soon')).toHaveLength(3);
   });
 
-  it('shows a search box that is disabled and says why', () => {
-    render(<HomePage />);
+  it('shows a working, enabled search box', () => {
+    renderHome();
     const search = screen.getByRole('searchbox', { name: 'Search tools' });
-    expect(search).toBeDisabled();
-    expect(search).toHaveAccessibleDescription(/available once the first tools are added/i);
+    expect(search).not.toBeDisabled();
   });
 
-  it('explains that there are no tools yet instead of listing any', () => {
-    render(<HomePage />);
+  it('navigates to the All Tools page with the query on search submit', () => {
+    const navigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(navigate);
+
+    renderHome();
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search tools' }), {
+      target: { value: 'json' },
+    });
+    fireEvent.submit(screen.getByRole('search'));
+
+    expect(navigate).toHaveBeenCalledWith('/tools?q=json');
+  });
+
+  it('lists every tool, each linking to its own page', () => {
+    renderHome();
     const tools = within(screen.getByRole('region', { name: 'All tools' }));
-    expect(tools.getByRole('heading', { name: 'The first tools are on their way' })).toBeVisible();
-    expect(tools.queryByRole('link')).not.toBeInTheDocument();
+    for (const tool of TOOLS) {
+      expect(tools.getByRole('link', { name: tool.name })).toHaveAttribute(
+        'href',
+        toolRoute(tool.slug),
+      );
+    }
   });
 
   it('offers a link to browse the categories', () => {
-    render(<HomePage />);
+    renderHome();
     expect(screen.getByRole('link', { name: 'Browse categories' })).toHaveAttribute(
       'href',
-      '#categories',
+      '/#categories',
     );
   });
 
   it('keeps a valid heading outline: h1, then h2 sections, then h3 cards', () => {
-    render(<HomePage />);
+    renderHome();
     const levels = screen.getAllByRole('heading').map((h) => Number(h.tagName.slice(1)));
     expect(levels[0]).toBe(1);
     for (let i = 1; i < levels.length; i++) {

@@ -14,19 +14,22 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 
 ## Status
 
-| Phase | Scope                                           | State |
-| ----- | ----------------------------------------------- | ----- |
-| 0–1   | Analysis, monorepo, tooling, server skeleton    | done  |
-| 2     | Design system + app shell                       | done  |
-| 3     | Tool registry + routing                         | next  |
-| 4–6   | Japan / Student / Developer tools               |       |
-| 7–8   | Search, SEO foundations                         |       |
-| 9–11  | Full test pass, lint/build, UX/a11y/perf review |       |
+| Phase | Scope                                                       | State |
+| ----- | ----------------------------------------------------------- | ----- |
+| 0–1   | Analysis, monorepo, tooling, server skeleton                | done  |
+| 2     | Design system + app shell                                   | done  |
+| 3     | Tool registry, routing, first 10 tools, client-side search  | done  |
+| 8     | Server-side SEO injection (per-route tags), sitemap, robots | next  |
+| 9–11  | Full test pass, lint/build, UX/a11y/perf review             |       |
 
-The web app is currently the app shell plus a home page; **no tools exist yet** (the home page says so),
-and there is **no router yet** — category/"All Tools" links are anchors to home-page sections
-(`apps/web/src/config/navigation.ts`), which Phase 3 replaces with real routes. The search box on the
-home page is a disabled placeholder until the registry exists. Update this table as phases land.
+Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
+Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
+stale — see `docs/tools.md` for what actually landed. Update this table as phases land.
+
+The app now has real routes (`react-router-dom`), a working tool registry with all 10 MVP tools, and a
+client-side search over it (`apps/web/src/lib/searchTools.ts`). What's still outstanding: server-side
+SEO tag injection, `sitemap.xml`/`robots.txt` (Phase 8) — pages set `document.title`/meta client-side
+today (`useDocumentMeta`), which does not help crawlers/social previews that do not execute JavaScript.
 
 ## Architecture
 
@@ -39,7 +42,7 @@ packages/shared  Framework-free TypeScript shared by both (tool registry metadat
                  constants). Shipped as *source* (package.json `exports` → src/index.ts); consumers'
                  bundlers compile it. It must not import React, Express or Node-only APIs.
 prisma/          schema.prisma (SQLite). apps/server/src/generated/ is generated and git-ignored.
-docs/            architecture.md (why), tools.md (added with the registry in Phase 3).
+docs/            architecture.md (why), tools.md (the registry, routing and how to add a tool).
 ```
 
 Details and rationale: `docs/architecture.md`.
@@ -105,16 +108,23 @@ git-ignored; see `.env.example`).
 - A change is not done until `npm run check` passes. Report failures honestly; never claim success
   from a partial run. Verify servers/UI by actually running them, not just by compiling.
 
-## Tool architecture (implemented in Phase 3 — this is the contract)
+## Tool architecture (Phase 3 — the contract, and how it works today)
 
-- Tool **metadata** lives in one registry in `packages/shared` (id, slug, name, description, category,
-  icon identifier, keywords, ordering/featured flags). The route is derived
-  (`/tools/<category>/<slug>`), never stored twice. Homepage cards, category pages, search, the sitemap and
-  SEO tags are all generated from it. Nothing hard-codes a tool list.
+Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the short version:
+
+- Tool **metadata** lives in one registry, `TOOLS` in `packages/shared/src/tools.ts` (id, slug, name,
+  description, category, icon identifier, keywords, seoTitle, seoDescription, localOnly, order). The
+  route is derived — **`/tools/<slug>`, flat, not nested under its category** (`/tools/japan` is the
+  _category_ page; a tool's own route is a sibling, e.g. `/tools/japanese-yen-converter`) — never
+  stored twice. Homepage cards, category pages, search and per-route document title/description are
+  all generated from it; the sitemap/robots generation itself is still Phase 8. Nothing hard-codes a
+  tool list.
 - Tool **implementation** lives in `apps/web/src/tools/<tool-id>/`: `logic.ts` (pure, tested),
-  `<Name>Tool.tsx` (UI built from shared components), `content` for the explanatory copy, tests.
-  Tools are lazy-loaded so each is its own chunk.
-- A test enforces registry ↔ implementation parity (no metadata without a component and vice versa).
+  `<Name>Tool.tsx` (UI built from shared components), `content.tsx` for the explanatory copy, tests.
+  `apps/web/src/tools/index.ts` maps each registry id to its `{ Component, content }`; `Component` is
+  behind its own `import()`, so Vite gives each tool its own chunk.
+- A test (`apps/web/src/tools/registry.test.ts`) enforces registry ↔ implementation parity (no
+  metadata without a component and vice versa).
 
 ### Rules for adding a tool
 
@@ -122,7 +132,8 @@ git-ignored; see `.env.example`).
 2. Add the registry entry; create the tool folder; write `logic.ts` **and its tests first**.
 3. Build the UI from shared components — do not invent a new page layout.
 4. Include validation, friendly errors, reset/copy where sensible, and explanatory content for users/SEO.
-5. Run `npm run check`. Update `docs/tools.md`, and this file if any rule changed.
+5. Register it in `apps/web/src/tools/index.ts`.
+6. Run `npm run check`. Update `docs/tools.md`, and this file if any rule changed.
 
 ## Rules against fake functionality
 
@@ -148,9 +159,12 @@ git-ignored; see `.env.example`).
 
 - Every route has a unique `<title>`, meta description, canonical URL, Open Graph tags, one `<h1>` and a
   sensible heading hierarchy; clean URLs; useful explanatory content per tool; no keyword stuffing.
-- A client-rendered SPA hides per-page tags from crawlers that do not run JS (social previews), so the
-  server injects route-specific tags into `index.html` from the registry (Phase 8), and generates
-  `sitemap.xml` / `robots.txt` from the same registry.
+- Every tool/category page calls `useDocumentMeta` (`apps/web/src/lib/useDocumentMeta.ts`) to set
+  `document.title`/meta description from the registry client-side. This is a stopgap: a client-rendered
+  SPA still hides per-page tags from crawlers and social previews that do not run JS, so the server
+  will inject route-specific tags into `index.html` from the registry (Phase 8), and generate
+  `sitemap.xml` / `robots.txt` from the same registry. Canonical URLs and `og:url` wait on a known
+  production origin.
 - Lazy-load tools, keep bundles small, and keep layout stable (Core Web Vitals).
 
 ## Accessibility and UI rules
@@ -169,9 +183,12 @@ colour contrast meets WCAG AA; touch targets are comfortable; layouts work on mo
   `focus`; shape/elevation `rounded-control|card|pill`, `shadow-card|raised`; widths `max-w-page|content`.
   Need a new colour? Add a token (and check AA contrast); never an arbitrary value like `bg-[#123456]`.
 - **Building blocks** live in `apps/web/src/components/`: `ui/` (Button, ButtonLink, Input, Textarea,
-  Select, Field, Card, Badge, Alert, EmptyState, CopyButton, icons) and `layout/` (SiteLayout, Header,
-  Footer, Container, Section, PageHeader, Breadcrumbs, ToolPageLayout). Reuse them; add a component only
-  when a real tool needs it. Form controls always go through `Field` (label, hint, announced error).
+  Select, Field, Card, Badge, Alert, EmptyState, CopyButton, ResultBox, icons), `layout/` (SiteLayout,
+  Header, Footer, Container, Section, PageHeader, Breadcrumbs, ToolPageLayout), and `tool/` (ToolCard —
+  the tool summary card used on the home page, "All tools" and category pages). Reuse them; add a
+  component only when a real tool needs it. Form controls always go through `Field` (label, hint,
+  announced error). `ResultBox` is the shared "labelled result + copy" pattern most calculator/converter
+  tools need — use it before writing a bespoke result block.
 - **One `<main>`, one `<h1>`.** `SiteLayout` owns `<main id="main">`; pages render inside it. Tool pages
   are `ToolPageLayout` with the tool as its children; pass `localOnly` only if the tool truly runs in the
   browser. Heading outline: h1 → h2 sections → h3 cards, no skipped levels.

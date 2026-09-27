@@ -1,14 +1,23 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { Header } from './Header';
 
 const NAV = [
   ['Home', '/'],
-  ['Japan', '/#japan'],
-  ['Student', '/#student'],
-  ['Developer', '/#developer'],
-  ['All Tools', '/#tools'],
+  ['Japan', '/tools/japan'],
+  ['Student', '/tools/student'],
+  ['Developer', '/tools/developer'],
+  ['All Tools', '/tools'],
 ] as const;
+
+function renderHeader() {
+  return render(
+    <MemoryRouter>
+      <Header />
+    </MemoryRouter>,
+  );
+}
 
 function menuButton() {
   return screen.getByRole('button', { name: 'Menu' });
@@ -23,13 +32,13 @@ function mobileNav() {
 
 describe('Header', () => {
   it('shows the brand as a link to the home page', () => {
-    render(<Header />);
+    renderHeader();
     const brand = within(screen.getByRole('banner')).getAllByRole('link', { name: 'Toolora' })[0];
     expect(brand).toHaveAttribute('href', '/');
   });
 
   it('renders the main navigation with every destination', () => {
-    render(<Header />);
+    renderHeader();
     const nav = within(screen.getByRole('navigation', { name: 'Main' }));
     for (const [label, href] of NAV) {
       expect(nav.getByRole('link', { name: label })).toHaveAttribute('href', href);
@@ -37,20 +46,20 @@ describe('Header', () => {
   });
 
   it('does not list AI in the navigation while it has no tools', () => {
-    render(<Header />);
+    renderHeader();
     expect(screen.queryByRole('link', { name: /^AI/ })).not.toBeInTheDocument();
   });
 
   describe('mobile menu', () => {
     it('starts closed, with the state exposed to assistive tech', () => {
-      render(<Header />);
+      renderHeader();
       expect(menuButton()).toHaveAttribute('aria-expanded', 'false');
       expect(menuButton()).toHaveAttribute('aria-controls', mobileNav().id);
       expect(mobileNav()).not.toBeVisible();
     });
 
     it('opens and closes from the menu button', () => {
-      render(<Header />);
+      renderHeader();
       fireEvent.click(menuButton());
       expect(menuButton()).toHaveAttribute('aria-expanded', 'true');
       expect(mobileNav()).toBeVisible();
@@ -64,7 +73,7 @@ describe('Header', () => {
     });
 
     it('closes on Escape and returns focus to the menu button', () => {
-      render(<Header />);
+      renderHeader();
       fireEvent.click(menuButton());
       within(mobileNav()).getByRole('link', { name: 'Japan' }).focus();
 
@@ -75,7 +84,7 @@ describe('Header', () => {
     });
 
     it('closes after a link is chosen', () => {
-      render(<Header />);
+      renderHeader();
       fireEvent.click(menuButton());
       fireEvent.click(within(mobileNav()).getByRole('link', { name: 'Student' }));
       expect(mobileNav()).not.toBeVisible();
@@ -83,7 +92,7 @@ describe('Header', () => {
     });
 
     it('closes when pressing outside the header, but not inside it', () => {
-      render(<Header />);
+      renderHeader();
       fireEvent.click(menuButton());
 
       fireEvent.pointerDown(within(screen.getByRole('banner')).getAllByRole('link')[0]!);
@@ -94,7 +103,7 @@ describe('Header', () => {
     });
 
     it('leaves page scrolling alone', () => {
-      render(<Header />);
+      renderHeader();
       fireEvent.click(menuButton());
       expect(document.body.style.overflow).toBe('');
       expect(document.documentElement.style.overflow).toBe('');

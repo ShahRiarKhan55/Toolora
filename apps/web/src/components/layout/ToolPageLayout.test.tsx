@@ -1,23 +1,26 @@
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { ToolPageLayout } from './ToolPageLayout';
 
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
-  { label: 'Developer Tools', href: '/#developer' },
+  { label: 'Developer Tools', href: '/tools/developer' },
   { label: 'Example tool' },
 ];
 
 function renderLayout(props: Partial<Parameters<typeof ToolPageLayout>[0]> = {}) {
   return render(
-    <ToolPageLayout
-      title="Example tool"
-      description="Does one example thing."
-      breadcrumbs={BREADCRUMBS}
-      {...props}
-    >
-      <p>Workspace content</p>
-    </ToolPageLayout>,
+    <MemoryRouter>
+      <ToolPageLayout
+        title="Example tool"
+        description="Does one example thing."
+        breadcrumbs={BREADCRUMBS}
+        {...props}
+      >
+        <p>Workspace content</p>
+      </ToolPageLayout>
+    </MemoryRouter>,
   );
 }
 
@@ -41,7 +44,7 @@ describe('ToolPageLayout', () => {
     expect(nav.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
     expect(nav.getByRole('link', { name: 'Developer Tools' })).toHaveAttribute(
       'href',
-      '/#developer',
+      '/tools/developer',
     );
     expect(nav.getByText('Example tool')).toHaveAttribute('aria-current', 'page');
     expect(nav.queryByRole('link', { name: 'Example tool' })).not.toBeInTheDocument();
@@ -78,6 +81,18 @@ describe('ToolPageLayout', () => {
     expect(details).not.toHaveAttribute('open');
     expect(within(details as HTMLElement).getByText('Is it free?').tagName).toBe('SUMMARY');
   });
+
+  it(
+    'gives the FAQ chevron an explicit size (regression: an overridden className with no ' +
+      'size-* class leaves an inline SVG at browser-default, oversized dimensions)',
+    () => {
+      const { container } = renderLayout({
+        faq: [{ question: 'Is it free?', answer: <p>Yes.</p> }],
+      });
+      const chevron = container.querySelector('summary svg');
+      expect(chevron?.getAttribute('class')).toMatch(/\bsize-\d+\b/);
+    },
+  );
 
   it('omits the FAQ section for an empty list', () => {
     renderLayout({ faq: [] });

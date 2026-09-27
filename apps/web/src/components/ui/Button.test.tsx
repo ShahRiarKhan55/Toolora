@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { Button, ButtonLink } from './Button';
 
@@ -41,11 +42,12 @@ describe('Button', () => {
 
 describe('ButtonLink', () => {
   it('renders a link, not a button, for navigation', () => {
-    render(<ButtonLink href="#categories">Browse categories</ButtonLink>);
-    expect(screen.getByRole('link', { name: 'Browse categories' })).toHaveAttribute(
-      'href',
-      '#categories',
+    render(
+      <MemoryRouter>
+        <ButtonLink href="/tools">Browse tools</ButtonLink>
+      </MemoryRouter>,
     );
+    expect(screen.getByRole('link', { name: 'Browse tools' })).toHaveAttribute('href', '/tools');
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });

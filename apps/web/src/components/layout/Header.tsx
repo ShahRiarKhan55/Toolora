@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PRIMARY_NAV } from '../../config/navigation';
 import { Logo } from '../brand/Logo';
 import { CloseIcon, MenuIcon } from '../ui/icons';
@@ -9,8 +10,8 @@ function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: 
     <ul className={layout === 'bar' ? 'flex items-center gap-1' : 'flex flex-col py-2'}>
       {PRIMARY_NAV.map((item) => (
         <li key={item.href}>
-          <a
-            href={item.href}
+          <Link
+            to={item.href}
             onClick={onNavigate}
             className={
               layout === 'bar'
@@ -19,7 +20,7 @@ function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: 
             }
           >
             {item.label}
-          </a>
+          </Link>
         </li>
       ))}
     </ul>

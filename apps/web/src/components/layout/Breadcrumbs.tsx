@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronRightIcon } from '../ui/icons';
 
 export interface BreadcrumbItem {
@@ -17,12 +18,12 @@ export function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
             <Fragment key={item.label}>
               <li>
                 {item.href && !isLast ? (
-                  <a
-                    href={item.href}
+                  <Link
+                    to={item.href}
                     className="underline-offset-2 hover:text-foreground hover:underline"
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 ) : (
                   <span
                     aria-current={isLast ? 'page' : undefined}
