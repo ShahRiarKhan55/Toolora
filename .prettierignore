@@ -5,3 +5,4 @@ package-lock.json
 apps/server/src/generated
 prisma/migrations
 graphify-out
+ollama_models
