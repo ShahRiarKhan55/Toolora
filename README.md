@@ -5,18 +5,19 @@ Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grou
 word counter) and **Developer** (JSON formatter, Base64, UUID generator, Unix timestamp converter). All
 10 tools run entirely in your browser, so your input is never sent anywhere.
 
-> **Status: early development (Phase 4 of 11).** The repository has the monorepo, tooling, the design
+> **Status: early development (Phase 5 of 11).** The repository has the monorepo, tooling, the design
 > system and app shell, a working API skeleton, real routing (`react-router-dom`), a tool registry, and
 > the first 10 tools — all working, tested and searchable/filterable at `/tools`, with related-tools
-> navigation on every tool page. See the status table in [`CLAUDE.md`](./CLAUDE.md) and the
+> navigation on every tool page, and a client-side SEO foundation (canonical/Open Graph/Twitter tags,
+> JSON-LD, `sitemap.xml`, `robots.txt`). See the status table in [`CLAUDE.md`](./CLAUDE.md) and the
 > registry/routing details in [`docs/tools.md`](./docs/tools.md).
 
 ## Architecture in brief
 
 - **`apps/web`** — React 19 + TypeScript + Vite + Tailwind CSS + React Router. All tool logic runs
   client-side; each tool is its own lazy-loaded chunk.
-- **`apps/server`** — Node.js + Express 5 + TypeScript. Health endpoint today; will also serve the built
-  site with SEO tags, `sitemap.xml` and `robots.txt` (Phase 8). Prisma 7 + SQLite for future persistence.
+- **`apps/server`** — Node.js + Express 5 + TypeScript. Health endpoint, `sitemap.xml` and `robots.txt`
+  (generated from the registry); serving the built SPA with server-injected SEO tags is still to do. Prisma 7 + SQLite for future persistence.
 - **`packages/shared`** — framework-free TypeScript shared by both (the tool registry, categories, SEO
   helpers).
 - **Tests** — Vitest, React Testing Library, supertest. **Lint/format** — ESLint (with jsx-a11y) + Prettier.
@@ -83,7 +84,7 @@ Full walkthrough: [`docs/tools.md`](./docs/tools.md). Short version:
    built from shared components, and `content.tsx` for the explanatory copy.
 3. Register it in `apps/web/src/tools/index.ts`.
 4. `npm run check`. The card, category page, route (`/tools/<slug>`), search entry and page title/
-   description all appear automatically — the sitemap and server-injected SEO tags land in Phase 8.
+   description, canonical/social tags and `sitemap.xml` entry all appear automatically.
 
 ## Testing
 
@@ -108,8 +109,10 @@ Nothing is deployed and no hosting has been chosen. Things a deployment will nee
   directory). Do not use `npm ci --omit=dev`: the install-time `prisma generate` needs the dev-only
   `prisma` CLI, and `--ignore-scripts` would skip the `better-sqlite3` native binary.
 - Environment: `NODE_ENV=production`, `PORT`, `DATABASE_URL` (a persistent path if a model is ever added),
-  optional `LOG_LEVEL`. Production logs are JSON lines on stdout.
-- Behind a reverse proxy/CDN, terminate TLS there. Serving the SPA and SEO tags from the server is Phase 8.
+  optional `LOG_LEVEL`. Production logs are JSON lines on stdout. Set `VITE_PUBLIC_SITE_URL` to the real
+  public origin (no trailing slash) **at build time** (the web bundle reads it) and at runtime (the server
+  reads it) — canonical/OG/JSON-LD URLs and `sitemap.xml` need it; without it `sitemap.xml` returns 404.
+- Behind a reverse proxy/CDN, terminate TLS there. Serving the built SPA and injecting SEO tags from the server is still to do.
 - Any paid hosting, domain or service must be approved by the project owner first.
 
 ## License

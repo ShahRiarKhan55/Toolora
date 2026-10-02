@@ -25,7 +25,8 @@ Items marked _(planned)_ are designed but not built yet.
                         ┌────────────────────────────── server ───────────────────────────────┐
                         │  apps/server (Express 5)                                            │
                         │   /api/*  health (+ future features)                                │
-                        │   (planned) serve SPA, inject per-route SEO tags, sitemap, robots   │
+                        │   /sitemap.xml, /robots.txt (from the registry)                       │
+                        │   (planned) serve SPA, inject per-route SEO tags                    │
                         │   Prisma 7 ─► SQLite (no models yet)                                │
                         └─────────────────────────────────────────────────────────────────────┘
 
@@ -87,7 +88,7 @@ the slug/category id. `apps/web/src/tools/index.ts` maps `id` → a lazily-loade
 map of ten `import()` calls, not `import.meta.glob` — simple enough not to need the extra indirection at
 this scale) plus its `content`; `registry.test.ts` fails if a registry entry has no implementation or an
 implementation has no entry. Cards, category pages, search and per-route document title/description all
-read this one list; the sitemap and server-injected SEO tags are Phase 8.
+read this one list; the sitemap, `robots.txt` and per-route SEO tags are generated from it too.
 
 Deliberately _not_ in `ToolMeta`: a `featured` or `status` flag. Every MVP tool is fully built and listed
 plainly (CLAUDE.md's "no disabled 'coming soon' tools" rule) — extend the type when a real need for either
@@ -113,16 +114,37 @@ given (via `ToolCard`, the same card used everywhere else) — it has no opinion
 is deliberately no second, hand-maintained "related tools" map: doing that risks drifting out of sync
 with the registry and pointing at a tool that no longer exists.
 
-### 5. SEO strategy _(planned, Phase 8)_
+### 5. SEO strategy _(Phase 5 done; server-side tag injection still planned)_
 
 A pure Vite SPA serves the same `<head>` for every URL, which hurts crawlers and social previews that do
 not execute JavaScript. Instead of adopting an SSR framework, the Express server (already required for
 `/api`) serves the built `index.html` and substitutes route-specific `<title>`, description, canonical,
-Open Graph tags and JSON-LD, computed by shared helpers from the registry. `sitemap.xml` and `robots.txt`
-are generated from the same registry. The client updates `document.title`/meta on navigation with a
+Open Graph tags and JSON-LD, computed by shared helpers from the registry. The client updates `document.title`/meta on navigation with a
 small hook (React 19's native metadata hoisting would create duplicates next to the server-injected
 tags). Possible later upgrade: build-time prerendering of static HTML, which would also allow fully
 static hosting.
+
+**What exists today (Phase 5):**
+
+- **Public origin.** `VITE_PUBLIC_SITE_URL` (repo-root `.env`, see `.env.example`) is the one configured
+  production origin. `resolvePublicSiteOrigin` (`packages/shared/src/url.ts`) trims it and strips
+  trailing slashes; the web app reads it via `import.meta.env` (`lib/siteUrl.ts`, Vite `envDir` is the repo
+  root), the server via `process.env` (`config.ts`). Because Vite inlines it, set it when building the web
+  bundle. Unset (dev): canonical/`og:url` are same-origin-relative, JSON-LD is omitted and `sitemap.xml` is
+  404 — no domain is ever invented. Never use a placeholder like `https://example.com`.
+- **Per-route tags.** `useDocumentMeta({ title, description, path?, robots?, ogType?, structuredData? })`
+  writes title, description, robots, canonical, `og:*`, `twitter:*` (summary card) and JSON-LD on every
+  call and removes anything not supplied, so no tag survives from the previous route. All pages use it:
+  home, `/tools`, category and tool pages (canonical = their own route) and the 404 page (`noindex,follow`,
+  no canonical/`og:url`). `/tools?q=…&category=…` canonicalizes to `/tools` (or to the category page for a
+  bare category filter) via `allToolsCanonicalPath`. A category with no tools is `noindex,follow`.
+- **Structured data** (`structuredData.ts`): `WebSite` on the home page, `WebApplication` on tool pages,
+  built only from registry/site constants. No ratings, reviews, prices or organization/author claims.
+- **`sitemap.xml` / `robots.txt`** (`sitemap.ts`, served by `apps/server/src/routes/seo.ts`): generated
+  per request from `TOOLS` and `CATEGORIES` (home, `/tools`, non-empty categories, every tool). `robots.txt`
+  allows everything and lists the sitemap only when an origin is configured.
+- **Limitation.** These tags are still set client-side; crawlers/social scrapers that do not run
+  JavaScript see only `index.html`'s static head. Server-side injection remains to be built.
 
 ### 6. Database
 
@@ -198,9 +220,9 @@ Decisions and why:
   registry and a working search exist.
 - **SEO of the home page.** `index.html` carries the title, description, theme colour, favicon and basic
   Open Graph tags. A canonical URL and `og:url`/`og:image` are deliberately absent: they need the
-  production origin, which does not exist yet. Phase 8's server-side injection adds them; nothing
-  about that design changed. Other routes' `document.title`/description are set client-side by
-  `useDocumentMeta` in the meantime (see "SEO strategy" above).
+  production origin, which does not exist yet. Phase 5 sets them client-side from `VITE_PUBLIC_SITE_URL`;
+  server-side injection into this file is still to do. Other routes' tags are set by
+  `useDocumentMeta` (see "SEO strategy" above).
 
 ### 9. Toolchain pins
 

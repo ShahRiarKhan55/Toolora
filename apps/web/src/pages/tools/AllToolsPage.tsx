@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Input } from '../../components/ui/Input';
 import { SearchIcon } from '../../components/ui/icons';
+import { allToolsCanonicalPath } from '../../lib/allToolsCanonical';
 import { searchTools } from '../../lib/searchTools';
 import { useDocumentMeta } from '../../lib/useDocumentMeta';
 
@@ -27,15 +28,17 @@ function categoryListText(): string {
 }
 
 export function AllToolsPage() {
-  useDocumentMeta(
-    `All Tools — ${SITE_NAME}`,
-    `Browse every Toolora tool: ${categoryListText()} utilities that run entirely in your browser.`,
-  );
-
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') ?? '';
   const categoryParam = searchParams.get('category');
   const activeCategory = isCategoryId(categoryParam) ? categoryParam : null;
+
+  // Search/filter query params never create a separate canonical page — see allToolsCanonicalPath.
+  useDocumentMeta({
+    title: `All Tools — ${SITE_NAME}`,
+    description: `Browse every Toolora tool: ${categoryListText()} utilities that run entirely in your browser.`,
+    path: allToolsCanonicalPath(activeCategory, query),
+  });
 
   const results = useMemo(() => {
     const matches = searchTools(TOOLS, query);

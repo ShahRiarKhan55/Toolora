@@ -17,10 +17,15 @@ export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
   const tools = getToolsByCategory(categoryId);
   const otherCategories = CATEGORIES.filter((c) => c.id !== categoryId);
 
-  useDocumentMeta(
-    `${category.name} Tools — Toolora`,
-    `${category.description} ${tools.length > 0 ? `${tools.length} tools available.` : ''}`.trim(),
-  );
+  useDocumentMeta({
+    title: `${category.name} Tools — Toolora`,
+    description:
+      `${category.description} ${tools.length > 0 ? `${tools.length} tools available.` : ''}`.trim(),
+    path: categoryRoute(categoryId),
+    // A category with no tools yet (currently "ai") has no indexable content of its own — see
+    // docs/tools.md, "SEO" — so it is excluded from search results until it has real tool pages.
+    robots: tools.length > 0 ? 'index,follow' : 'noindex,follow',
+  });
 
   return (
     <Container className="py-8 sm:py-12">

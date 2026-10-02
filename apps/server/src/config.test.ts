@@ -8,6 +8,7 @@ describe('loadConfig', () => {
       port: 3001,
       databaseUrl: 'file:./prisma/dev.db',
       logLevel: 'debug',
+      publicSiteOrigin: undefined,
     });
   });
 
@@ -34,5 +35,16 @@ describe('loadConfig', () => {
 
   it('rejects an empty DATABASE_URL', () => {
     expect(() => loadConfig({ DATABASE_URL: '' })).toThrow(/DATABASE_URL/);
+  });
+
+  it('resolves publicSiteOrigin from VITE_PUBLIC_SITE_URL, trailing slash stripped', () => {
+    expect(loadConfig({ VITE_PUBLIC_SITE_URL: 'https://toolora.example/' }).publicSiteOrigin).toBe(
+      'https://toolora.example',
+    );
+  });
+
+  it('leaves publicSiteOrigin undefined when VITE_PUBLIC_SITE_URL is unset or blank', () => {
+    expect(loadConfig({}).publicSiteOrigin).toBeUndefined();
+    expect(loadConfig({ VITE_PUBLIC_SITE_URL: '' }).publicSiteOrigin).toBeUndefined();
   });
 });

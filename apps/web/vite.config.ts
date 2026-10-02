@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Read .env files from the repo root, like the server does (see .env.example) — one configured
+  // origin, not a second apps/web/.env. Only VITE_-prefixed variables are exposed to client code.
+  envDir: '../../',
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,

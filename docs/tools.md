@@ -40,7 +40,7 @@ interface ToolMeta {
 
 Helpers: `toolRoute(slug)`, `categoryRoute(category)`, `getToolBySlug(slug)`,
 `getToolsByCategory(category)`. The home page, "All tools", category pages, search, breadcrumbs and
-SEO tags all read from `TOOLS` — none of them keep their own list.
+SEO tags and the sitemap all read from `TOOLS` — none of them keep their own list.
 
 Every tool in `TOOLS` is fully working; there are no disabled or "coming soon" entries (see CLAUDE.md,
 "Rules against fake functionality"). A category with no tools yet (currently `ai`) shows an
@@ -124,8 +124,9 @@ visible tool count, so a reader is never stuck without a way to the rest of the 
 
 ## SEO (current state)
 
-Every tool and category page calls `useDocumentMeta` (`apps/web/src/lib/useDocumentMeta.ts`) to set
-`document.title` and the meta description while it is mounted. This helps once JavaScript has run, but
-a pure client-side SPA still serves the same initial `<head>` to crawlers and social previews that do
-not execute JavaScript — the server-side injection that fixes this for real is Phase 8 (see
-`docs/architecture.md`, "SEO strategy"); nothing here replaces that plan.
+Every page calls `useDocumentMeta` (`apps/web/src/lib/useDocumentMeta.ts`). A tool page takes its title
+(`seoTitle`), description (`seoDescription`), canonical (`toolRoute(slug)`) and `WebApplication` JSON-LD
+from its registry entry; `sitemap.xml` lists every tool automatically. Adding a tool needs no SEO work
+beyond writing a unique `seoTitle`/`seoDescription`. The `ai` category has no tools, so it is `noindex`
+and absent from the sitemap until it has one. Details: `docs/architecture.md`, "SEO strategy". Tags are
+still set client-side only; server-side injection is not built yet.

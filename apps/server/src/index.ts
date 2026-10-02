@@ -12,7 +12,7 @@ function main(): void {
   const config = loadConfig();
   const logger = createLogger({ level: config.logLevel, json: config.nodeEnv === 'production' });
   const db = createDatabase(config.databaseUrl);
-  const app = createApp({ logger, db });
+  const app = createApp({ logger, db, publicSiteOrigin: config.publicSiteOrigin });
 
   const server = app.listen(config.port, () => {
     logger.info(`${SITE_NAME} server listening`, { port: config.port, env: config.nodeEnv });

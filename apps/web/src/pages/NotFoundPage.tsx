@@ -5,7 +5,12 @@ import { ButtonLink } from '../components/ui/Button';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 export function NotFoundPage() {
-  useDocumentMeta(`Page not found — ${SITE_NAME}`, 'This page does not exist.');
+  // No `path`: a 404 has no canonical URL of its own, and must not point at a real page.
+  useDocumentMeta({
+    title: `Page not found — ${SITE_NAME}`,
+    description: 'This page does not exist.',
+    robots: 'noindex,follow',
+  });
 
   return (
     <Container className="py-16 text-center sm:py-24">

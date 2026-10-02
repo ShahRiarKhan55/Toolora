@@ -20,7 +20,8 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 2     | Design system + app shell                                                    | done  |
 | 3     | Tool registry, routing, first 10 tools, client-side search                   | done  |
 | 4     | Product quality: related tools, category filter/discovery, content/a11y pass | done  |
-| 8     | Server-side SEO injection (per-route tags), sitemap, robots                  | next  |
+| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots   | done  |
+| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)     | next  |
 | 9–11  | Full test pass, lint/build, UX/a11y/perf review                              |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
@@ -32,9 +33,11 @@ accessibility test coverage — see `docs/tools.md` ("Search", "Related tools").
 phases land.
 
 The app now has real routes (`react-router-dom`), a working tool registry with all 10 MVP tools, and a
-client-side search over it (`apps/web/src/lib/searchTools.ts`). What's still outstanding: server-side
-SEO tag injection, `sitemap.xml`/`robots.txt` (Phase 8) — pages set `document.title`/meta client-side
-today (`useDocumentMeta`), which does not help crawlers/social previews that do not execute JavaScript.
+client-side search over it (`apps/web/src/lib/searchTools.ts`). Phase 5 added the SEO foundation
+(see "SEO principles"): every page sets canonical/OG/Twitter/robots tags and JSON-LD client-side
+(`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. What's still
+outstanding: server-side injection of those tags into `index.html` (Phase 8) — client-set tags do not
+help crawlers/social previews that do not execute JavaScript.
 
 ## Architecture
 
@@ -164,12 +167,17 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 
 - Every route has a unique `<title>`, meta description, canonical URL, Open Graph tags, one `<h1>` and a
   sensible heading hierarchy; clean URLs; useful explanatory content per tool; no keyword stuffing.
-- Every tool/category page calls `useDocumentMeta` (`apps/web/src/lib/useDocumentMeta.ts`) to set
-  `document.title`/meta description from the registry client-side. This is a stopgap: a client-rendered
-  SPA still hides per-page tags from crawlers and social previews that do not run JS, so the server
-  will inject route-specific tags into `index.html` from the registry (Phase 8), and generate
-  `sitemap.xml` / `robots.txt` from the same registry. Canonical URLs and `og:url` wait on a known
-  production origin.
+- Every page calls `useDocumentMeta({ title, description, path?, robots?, structuredData? })`
+  (`apps/web/src/lib/useDocumentMeta.ts`), which owns title, description, robots, canonical, `og:*`,
+  `twitter:*` and JSON-LD and clears whatever a page does not supply. Never set head tags any other way.
+  The 404 page passes no `path` and `noindex,follow`; empty categories are `noindex,follow`; search/filter
+  query strings never get their own canonical. This is client-side only — the server still has to inject
+  route-specific tags into `index.html` (Phase 8) for crawlers that do not run JS.
+- **`VITE_PUBLIC_SITE_URL`** is the single production origin (no trailing slash), read by web and server
+  and inlined into the web bundle at build time. Unset → relative canonicals, no JSON-LD, `sitemap.xml` 404. Never invent or placeholder it; set the real one for production builds.
+- `sitemap.xml`/`robots.txt` are generated from `TOOLS`/`CATEGORIES` (`packages/shared/src/sitemap.ts`,
+  served by `apps/server/src/routes/seo.ts`); never hand-list URLs. JSON-LD is `WebSite` (home) and
+  `WebApplication` (tools) from registry data only — no ratings, reviews, prices or organization claims.
 - Lazy-load tools, keep bundles small, and keep layout stable (Core Web Vitals).
 
 ## Accessibility and UI rules

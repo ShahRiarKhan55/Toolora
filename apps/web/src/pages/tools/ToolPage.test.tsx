@@ -42,4 +42,20 @@ describe('ToolPage', () => {
     }
     expect(section.queryByRole('link', { name: tool.name })).not.toBeInTheDocument();
   });
+
+  it.each(TOOLS)('sets its own title, description and canonical for $slug', (tool) => {
+    renderTool(tool.slug);
+    const meta = (attr: string, key: string) =>
+      document.querySelector(`meta[${attr}="${key}"]`)?.getAttribute('content');
+
+    expect(document.title).toBe(tool.seoTitle);
+    expect(meta('name', 'description')).toBe(tool.seoDescription);
+    expect(meta('name', 'robots')).toBe('index,follow');
+    expect(meta('property', 'og:title')).toBe(tool.seoTitle);
+    expect(meta('name', 'twitter:title')).toBe(tool.seoTitle);
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      toolRoute(tool.slug),
+    );
+  });
 });
