@@ -3,6 +3,7 @@ import {
   CATEGORIES,
   categoryMeta,
   categoryRoute,
+  getPopulatedCategories,
   getToolsByCategory,
 } from '@toolora/shared';
 import type { CategoryId } from '@toolora/shared';
@@ -21,7 +22,7 @@ const categoryById = new Map(CATEGORIES.map((category) => [category.id, category
 export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
   const category = categoryById.get(categoryId)!;
   const tools = getToolsByCategory(categoryId);
-  const otherCategories = CATEGORIES.filter((c) => c.id !== categoryId);
+  const otherCategories = getPopulatedCategories().filter((c) => c.id !== categoryId);
 
   useDocumentMeta(categoryMeta(categoryId));
 
@@ -42,13 +43,16 @@ export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
 
       <div className="mt-8">
         {tools.length > 0 ? (
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {tools.map((tool) => (
-              <li key={tool.id}>
-                <ToolCard tool={tool} showCategory={false} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <h2 className="sr-only">{category.name} tools</h2>
+            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {tools.map((tool) => (
+                <li key={tool.id}>
+                  <ToolCard tool={tool} showCategory={false} />
+                </li>
+              ))}
+            </ul>
+          </>
         ) : (
           <EmptyState
             as="h2"

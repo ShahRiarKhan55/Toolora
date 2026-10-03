@@ -1,4 +1,5 @@
-import type { CategoryId } from './categories';
+import { CATEGORIES } from './categories';
+import type { Category, CategoryId } from './categories';
 
 // The tool icon identifiers a ToolMeta can reference. Kept here (not in `apps/web`) so the registry
 // stays the single source of truth; `apps/web/src/config/toolPresentation.ts` maps each id to a real
@@ -43,6 +44,12 @@ export interface ToolMeta {
   localOnly: boolean;
   /** Manual display order within a category and across "All tools". */
   order: number;
+  /**
+   * Hand-picked ids of genuinely related tools, most relevant first (see `getRelatedTools`). Optional:
+   * remaining slots are filled deterministically from the registry. A test checks every id exists,
+   * is not the tool itself, and is not repeated.
+   */
+  related?: readonly string[];
 }
 
 // Every tool here is fully implemented and working (see CLAUDE.md: no disabled "coming soon" entries).
@@ -62,6 +69,11 @@ export const TOOLS: readonly ToolMeta[] = [
       'Convert Japanese yen (JPY) to USD, EUR, GBP and more with editable reference rates. Not live market rates. Runs in your browser.',
     localOnly: true,
     order: 1,
+    related: [
+      'percentage-grade-calculator',
+      'japanese-era-converter',
+      'japanese-postal-code-formatter',
+    ],
   },
   {
     id: 'japanese-era-converter',
@@ -86,6 +98,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Convert Gregorian dates to Japanese era notation (Meiji, Taisho, Showa, Heisei, Reiwa) and back, with valid-range checks.',
     localOnly: true,
     order: 2,
+    related: ['japanese-age-calculator', 'date-difference-calculator', 'japanese-yen-converter'],
   },
   {
     id: 'japanese-age-calculator',
@@ -100,6 +113,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Calculate age in years, months and days from a birth date, plus days until the next birthday. Handles leap-day birthdays.',
     localOnly: true,
     order: 3,
+    related: ['date-difference-calculator', 'japanese-era-converter'],
   },
   {
     id: 'gpa-calculator',
@@ -114,6 +128,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Calculate your weighted grade point average from course credits and letter grades on a configurable 4.0 scale.',
     localOnly: true,
     order: 4,
+    related: ['gpa-percentage-converter', 'percentage-grade-calculator'],
   },
   {
     id: 'percentage-grade-calculator',
@@ -135,6 +150,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Calculate percentage from marks, marks from a percentage, percentage change, and a letter grade on a default scale.',
     localOnly: true,
     order: 5,
+    related: ['gpa-percentage-converter', 'gpa-calculator', 'japanese-yen-converter'],
   },
   {
     id: 'word-counter',
@@ -149,6 +165,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Count words, characters (with and without spaces), sentences and paragraphs, with estimated reading time.',
     localOnly: true,
     order: 6,
+    related: ['regex-tester'],
   },
   {
     id: 'json-formatter',
@@ -163,6 +180,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Format, validate and minify JSON online with clear, precise error messages. Safe parsing, nothing is executed.',
     localOnly: true,
     order: 7,
+    related: ['json-to-typescript', 'csv-json-converter', 'base64-encoder-decoder'],
   },
   {
     id: 'base64-encoder-decoder',
@@ -177,6 +195,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Encode text to Base64 or decode Base64 to text, with correct Unicode/UTF-8 handling and invalid-input detection.',
     localOnly: true,
     order: 8,
+    related: ['json-formatter', 'uuid-generator'],
   },
   {
     id: 'uuid-generator',
@@ -191,6 +210,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Generate cryptographically random UUID v4 values, one at a time or in bulk, with one-click copy.',
     localOnly: true,
     order: 9,
+    related: ['base64-encoder-decoder', 'unix-timestamp-converter'],
   },
   {
     id: 'unix-timestamp-converter',
@@ -205,6 +225,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Convert Unix epoch timestamps (seconds or milliseconds) to local and UTC date/time, and back, entirely in your browser.',
     localOnly: true,
     order: 10,
+    related: ['date-difference-calculator', 'uuid-generator'],
   },
   {
     id: 'regex-tester',
@@ -219,6 +240,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Test JavaScript regular expressions with flags, see every match with its position and capture groups, and get clear errors for invalid patterns.',
     localOnly: true,
     order: 11,
+    related: ['json-formatter', 'word-counter'],
   },
   {
     id: 'csv-json-converter',
@@ -233,6 +255,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Convert CSV to JSON and JSON to CSV in your browser. Handles quoted fields, commas, escaped quotes and newlines inside fields.',
     localOnly: true,
     order: 12,
+    related: ['json-formatter', 'json-to-typescript'],
   },
   {
     id: 'json-to-typescript',
@@ -248,6 +271,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Generate TypeScript interfaces from a JSON sample: nested objects, arrays and null values. Nothing is executed or uploaded.',
     localOnly: true,
     order: 13,
+    related: ['json-formatter', 'csv-json-converter'],
   },
   {
     id: 'gpa-percentage-converter',
@@ -263,6 +287,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Estimate percentage from GPA and GPA from percentage on a 4, 5 or 10-point scale with a simple linear formula. Institutions differ, so treat it as an estimate.',
     localOnly: true,
     order: 14,
+    related: ['gpa-calculator', 'percentage-grade-calculator'],
   },
   {
     id: 'date-difference-calculator',
@@ -277,6 +302,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Calculate the days, weeks, months and years between two dates. Leap years are handled, and exact calendar dates are used, not time zones.',
     localOnly: true,
     order: 15,
+    related: ['japanese-age-calculator', 'unix-timestamp-converter'],
   },
   {
     id: 'japanese-postal-code-formatter',
@@ -291,6 +317,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Format a Japanese postal code as XXX-XXXX from 7 digits, with or without a hyphen. Checks the format only; it does not look up addresses.',
     localOnly: true,
     order: 16,
+    related: ['japanese-phone-number-formatter', 'japanese-yen-converter'],
   },
   {
     id: 'japanese-phone-number-formatter',
@@ -306,6 +333,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Format Japanese mobile, toll-free and common landline numbers with hyphens, and convert +81 numbers. Formatting only; numbers are not verified.',
     localOnly: true,
     order: 17,
+    related: ['japanese-postal-code-formatter'],
   },
 ];
 
@@ -327,4 +355,9 @@ export function getToolBySlug(slug: string): ToolMeta | undefined {
 
 export function getToolsByCategory(category: CategoryId): ToolMeta[] {
   return TOOLS.filter((tool) => tool.category === category).sort((a, b) => a.order - b.order);
+}
+
+/** Categories that have at least one tool: the only ones worth linking to (the rest are noindex). */
+export function getPopulatedCategories(): Category[] {
+  return CATEGORIES.filter((category) => getToolsByCategory(category.id).length > 0);
 }

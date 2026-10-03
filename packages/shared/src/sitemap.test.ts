@@ -25,6 +25,10 @@ describe('getIndexableRoutes', () => {
     }
   });
 
+  it('lists every path once', () => {
+    expect(new Set(paths).size).toBe(paths.length);
+  });
+
   it('excludes the empty "ai" category (no indexable content yet)', () => {
     expect(paths).not.toContain('/tools/ai');
   });

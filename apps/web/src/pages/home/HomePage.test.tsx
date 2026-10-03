@@ -1,4 +1,4 @@
-import { CATEGORIES, getToolsByCategory, TOOLS, toolRoute } from '@toolora/shared';
+import { getPopulatedCategories, getToolsByCategory, toolRoute } from '@toolora/shared';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -26,23 +26,23 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows one card per category, in order, as h3 headings', () => {
+  it('shows one card per category that has tools, in order, as h3 headings', () => {
     renderHome();
     const categories = within(screen.getByRole('region', { name: 'Categories' }));
     const headings = categories.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(CATEGORIES.map((category) => `${category.name} Tools`));
+    expect(headings).toEqual(getPopulatedCategories().map((category) => `${category.name} Tools`));
   });
 
   it('gives every category card an id that navigation links can target', () => {
     renderHome();
-    for (const category of CATEGORIES) {
+    for (const category of getPopulatedCategories()) {
       expect(document.getElementById(category.id)).not.toBeNull();
     }
   });
 
   it("links each category card to that category's page", () => {
     renderHome();
-    for (const category of CATEGORIES) {
+    for (const category of getPopulatedCategories()) {
       expect(screen.getByRole('link', { name: `${category.name} Tools` })).toHaveAttribute(
         'href',
         `/tools/${category.id}`,
@@ -50,15 +50,15 @@ describe('HomePage', () => {
     }
   });
 
-  it('shows a tool count badge for categories with tools, and "Coming later" for AI', () => {
+  it('shows a tool count badge per category and does not link the empty AI category', () => {
     renderHome();
-    for (const category of CATEGORIES.filter((c) => c.id !== 'ai')) {
+    for (const category of getPopulatedCategories()) {
       const count = getToolsByCategory(category.id).length;
       const card = within(screen.getByRole('article', { name: `${category.name} Tools` }));
       expect(card.getByText(`${count} ${count === 1 ? 'tool' : 'tools'}`)).toBeInTheDocument();
     }
-    const ai = within(screen.getByRole('article', { name: /AI Tools/ }));
-    expect(ai.getByText('Coming later')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /AI Tools/ })).not.toBeInTheDocument();
+    expect(document.querySelector('a[href="/tools/ai"]')).toBeNull();
   });
 
   it('shows a working, enabled search box', () => {
@@ -80,15 +80,25 @@ describe('HomePage', () => {
     expect(navigate).toHaveBeenCalledWith('/tools?q=json');
   });
 
-  it('lists every tool, each linking to its own page', () => {
+  it('features the first tools of every populated category, each linking to its own page', () => {
     renderHome();
-    const tools = within(screen.getByRole('region', { name: 'All tools' }));
-    for (const tool of TOOLS) {
-      expect(tools.getByRole('link', { name: tool.name })).toHaveAttribute(
-        'href',
-        toolRoute(tool.slug),
-      );
+    const tools = within(screen.getByRole('region', { name: 'Featured tools' }));
+    for (const category of getPopulatedCategories()) {
+      for (const tool of getToolsByCategory(category.id).slice(0, 3)) {
+        expect(tools.getByRole('link', { name: tool.name })).toHaveAttribute(
+          'href',
+          toolRoute(tool.slug),
+        );
+      }
     }
+  });
+
+  it('links to the full tools directory', () => {
+    renderHome();
+    expect(screen.getByRole('link', { name: /^Browse all \d+ tools$/ })).toHaveAttribute(
+      'href',
+      '/tools',
+    );
   });
 
   it('offers a link to browse the categories', () => {

@@ -1,4 +1,4 @@
-import { CATEGORIES, categoryRoute, getToolsByCategory } from '@toolora/shared';
+import { categoryRoute, getPopulatedCategories, getToolsByCategory } from '@toolora/shared';
 import { Link } from 'react-router-dom';
 import { Section } from '../../components/layout/Section';
 import { Badge } from '../../components/ui/Badge';
@@ -13,8 +13,8 @@ export function CategoriesSection() {
       title="Categories"
       description="Tools are grouped by who they help. Select a category to see its tools."
     >
-      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {CATEGORIES.map((category) => {
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {getPopulatedCategories().map((category) => {
           const { Icon, tile } = CATEGORY_PRESENTATION[category.id];
           const toolCount = getToolsByCategory(category.id).length;
           return (
@@ -39,10 +39,8 @@ export function CategoriesSection() {
                 </h3>
                 <p className="mt-1 flex-1 text-muted-foreground">{category.description}</p>
                 <div className="mt-4">
-                  <Badge tone={toolCount > 0 ? 'primary' : 'neutral'}>
-                    {toolCount > 0
-                      ? `${toolCount} ${toolCount === 1 ? 'tool' : 'tools'}`
-                      : 'Coming later'}
+                  <Badge tone="primary">
+                    {toolCount} {toolCount === 1 ? 'tool' : 'tools'}
                   </Badge>
                 </div>
               </Card>

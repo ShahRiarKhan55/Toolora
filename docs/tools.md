@@ -145,9 +145,15 @@ rather than erroring or showing nothing.
 the registry — there is no second, manually maintained list of tool relationships:
 
 1. Exclude `current`.
-2. Same-category tools first, then every other tool, each group sorted by the registry's `order`
-   field (not array position) as the tie-breaker.
-3. Take the first `limit` (default 3).
+2. The tool's own optional `related` ids from the registry (Phase 9, hand-picked, most relevant first;
+   unknown ids are skipped), then same-category tools, then every other tool, the fallback groups
+   sorted by the registry's `order` field (not array position).
+3. De-duplicate and take the first `limit` (default 3).
+
+Phase 9 added `related` because pure category/order selection left 8 of 17 tools with no related-link
+inbound. A test now requires every tool to be linked from at least one other tool page. Home,
+header/footer, "Browse other categories" and the All-tools filters list only categories that have
+tools (`getPopulatedCategories()`), so the noindex AI category is never a discovery link.
 
 Because the result is always a subset of the `tools` array passed in, it can never surface a tool
 that isn't actually registered.

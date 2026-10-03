@@ -20,6 +20,38 @@ function tool(
 }
 
 describe('getRelatedTools', () => {
+  it('puts curated related ids first, then fills from the same category', () => {
+    const a = tool({ id: 'a', category: 'developer', order: 1 });
+    const b = tool({ id: 'b', category: 'student', order: 2 });
+    const current = tool({ id: 'current', category: 'developer', order: 3, related: ['b'] });
+    expect(getRelatedTools([a, b, current], current, 3).map((t) => t.id)).toEqual(['b', 'a']);
+  });
+
+  it('ignores curated ids that are the tool itself, unknown, or repeated', () => {
+    const a = tool({ id: 'a', category: 'developer', order: 1 });
+    const current = tool({
+      id: 'current',
+      category: 'developer',
+      order: 2,
+      related: ['current', 'ghost', 'a', 'a'],
+    });
+    expect(getRelatedTools([a, current], current, 3).map((t) => t.id)).toEqual(['a']);
+  });
+
+  it('gives every real tool the full set of unique, non-self related tools', () => {
+    for (const current of TOOLS) {
+      const ids = getRelatedTools(TOOLS, current).map((t) => t.id);
+      expect(ids, current.id).toHaveLength(3);
+      expect(new Set(ids).size, current.id).toBe(ids.length);
+      expect(ids, current.id).not.toContain(current.id);
+    }
+  });
+
+  it('links to every tool from at least one other tool page (no orphans)', () => {
+    const linked = new Set(TOOLS.flatMap((t) => getRelatedTools(TOOLS, t).map((r) => r.id)));
+    expect(TOOLS.filter((t) => !linked.has(t.id)).map((t) => t.id)).toEqual([]);
+  });
+
   it('never includes the current tool', () => {
     const current = TOOLS.find((t) => t.id === 'gpa-calculator')!;
     const related = getRelatedTools(TOOLS, current);

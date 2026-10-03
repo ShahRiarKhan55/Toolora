@@ -3,6 +3,7 @@ import { CATEGORY_IDS } from './categories';
 import {
   ALL_TOOLS_ROUTE,
   categoryRoute,
+  getPopulatedCategories,
   getToolBySlug,
   getToolsByCategory,
   TOOL_ICON_IDS,
@@ -11,6 +12,24 @@ import {
 } from './tools';
 
 describe('TOOLS registry', () => {
+  it('only lists existing, distinct, non-self tool ids in `related`', () => {
+    const ids = new Set(TOOLS.map((tool) => tool.id));
+    for (const tool of TOOLS) {
+      const related = tool.related ?? [];
+      expect(new Set(related).size, tool.id).toBe(related.length);
+      for (const id of related) {
+        expect(id, tool.id).not.toBe(tool.id);
+        expect(ids.has(id), `${tool.id} -> ${id}`).toBe(true);
+      }
+    }
+  });
+
+  it('getPopulatedCategories excludes categories with no tools', () => {
+    const populated = getPopulatedCategories().map((category) => category.id);
+    expect(populated).not.toContain('ai');
+    expect(populated).toEqual(CATEGORY_IDS.filter((id) => getToolsByCategory(id).length > 0));
+  });
+
   it('is not empty', () => {
     expect(TOOLS.length).toBeGreaterThan(0);
   });

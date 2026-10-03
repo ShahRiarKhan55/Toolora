@@ -1,4 +1,10 @@
-import { allToolsMeta, CATEGORIES, categoryListText, isCategoryId, TOOLS } from '@toolora/shared';
+import {
+  allToolsMeta,
+  categoryListText,
+  getPopulatedCategories,
+  isCategoryId,
+  TOOLS,
+} from '@toolora/shared';
 import type { CategoryId } from '@toolora/shared';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -79,7 +85,7 @@ export function AllToolsPage() {
         >
           All categories
         </Button>
-        {CATEGORIES.map((category) => (
+        {getPopulatedCategories().map((category) => (
           <Button
             key={category.id}
             size="sm"
@@ -95,6 +101,7 @@ export function AllToolsPage() {
       <div className="mt-8">
         {results.length > 0 ? (
           <>
+            <h2 className="sr-only">Tools</h2>
             <p className="text-sm text-muted-foreground" aria-live="polite">
               {results.length} {results.length === 1 ? 'tool' : 'tools'}
             </p>

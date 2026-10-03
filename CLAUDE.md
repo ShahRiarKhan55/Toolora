@@ -24,7 +24,8 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 6     | Production readiness: route focus/scroll, error boundary, target sizes                | done  |
 | 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone) | done  |
 | 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | done  |
-| 9–11  | Full test pass, lint/build, UX/a11y/perf review                                       |       |
+| 9     | Discovery: curated `related` links, populated-only category links, concise home       | done  |
+| 10–11 | Full test pass, lint/build, UX/a11y/perf review                                       |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left

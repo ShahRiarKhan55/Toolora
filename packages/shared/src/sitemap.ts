@@ -2,9 +2,8 @@
 // list so there is no second, hand-maintained URL list to drift out of sync (see CLAUDE.md, "Rules
 // against fake functionality" and docs/tools.md).
 
-import { CATEGORIES } from './categories';
 import { HOME_ROUTE } from './site';
-import { ALL_TOOLS_ROUTE, categoryRoute, getToolsByCategory, TOOLS, toolRoute } from './tools';
+import { ALL_TOOLS_ROUTE, categoryRoute, getPopulatedCategories, TOOLS, toolRoute } from './tools';
 import { absoluteUrl } from './url';
 
 export interface SitemapRoute {
@@ -17,9 +16,9 @@ export interface SitemapRoute {
  * out — it has no indexable content, just a "coming soon" empty state (see `docs/tools.md`).
  */
 export function getIndexableRoutes(): readonly SitemapRoute[] {
-  const categoryRoutes = CATEGORIES.filter(
-    (category) => getToolsByCategory(category.id).length > 0,
-  ).map((category) => ({ path: categoryRoute(category.id) }));
+  const categoryRoutes = getPopulatedCategories().map((category) => ({
+    path: categoryRoute(category.id),
+  }));
   const toolRoutes = TOOLS.map((tool) => ({ path: toolRoute(tool.slug) }));
 
   return [{ path: HOME_ROUTE }, { path: ALL_TOOLS_ROUTE }, ...categoryRoutes, ...toolRoutes];

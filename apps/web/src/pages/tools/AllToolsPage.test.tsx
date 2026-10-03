@@ -1,5 +1,5 @@
-import { getToolsByCategory, TOOLS } from '@toolora/shared';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { getPopulatedCategories, getToolsByCategory, TOOLS } from '@toolora/shared';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { AllToolsPage } from './AllToolsPage';
@@ -13,6 +13,25 @@ function renderAt(path: string) {
 }
 
 describe('AllToolsPage', () => {
+  it('keeps a valid heading outline with no skipped levels', () => {
+    renderAt('/tools');
+    const levels = screen.getAllByRole('heading').map((h) => Number(h.tagName.slice(1)));
+    expect(levels[0]).toBe(1);
+    for (let i = 1; i < levels.length; i++) {
+      expect(levels[i]! - levels[i - 1]!).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('offers category filters only for categories that have tools', () => {
+    renderAt('/tools');
+    const group = within(screen.getByRole('group', { name: 'Filter by category' }));
+    expect(group.getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'All categories',
+      ...getPopulatedCategories().map((c) => c.name),
+    ]);
+    expect(group.queryByRole('button', { name: 'AI' })).not.toBeInTheDocument();
+  });
+
   it('lists every tool when there is no search or filter', () => {
     renderAt('/tools');
     expect(screen.getByText(`${TOOLS.length} tools`)).toBeInTheDocument();
