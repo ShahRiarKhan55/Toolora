@@ -1,4 +1,10 @@
-import { ALL_TOOLS_ROUTE, CATEGORIES, categoryRoute, getToolsByCategory } from '@toolora/shared';
+import {
+  ALL_TOOLS_ROUTE,
+  CATEGORIES,
+  categoryMeta,
+  categoryRoute,
+  getToolsByCategory,
+} from '@toolora/shared';
 import type { CategoryId } from '@toolora/shared';
 import { Link } from 'react-router-dom';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
@@ -17,15 +23,7 @@ export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
   const tools = getToolsByCategory(categoryId);
   const otherCategories = CATEGORIES.filter((c) => c.id !== categoryId);
 
-  useDocumentMeta({
-    title: `${category.name} Tools — Toolora`,
-    description:
-      `${category.description} ${tools.length > 0 ? `${tools.length} tools available.` : ''}`.trim(),
-    path: categoryRoute(categoryId),
-    // A category with no tools yet (currently "ai") has no indexable content of its own — see
-    // docs/tools.md, "SEO" — so it is excluded from search results until it has real tool pages.
-    robots: tools.length > 0 ? 'index,follow' : 'noindex,follow',
-  });
+  useDocumentMeta(categoryMeta(categoryId));
 
   return (
     <Container className="py-8 sm:py-12">

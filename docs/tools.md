@@ -161,5 +161,5 @@ Every page calls `useDocumentMeta` (`apps/web/src/lib/useDocumentMeta.ts`). A to
 (`seoTitle`), description (`seoDescription`), canonical (`toolRoute(slug)`) and `WebApplication` JSON-LD
 from its registry entry; `sitemap.xml` lists every tool automatically. Adding a tool needs no SEO work
 beyond writing a unique `seoTitle`/`seoDescription`. The `ai` category has no tools, so it is `noindex`
-and absent from the sitemap until it has one. Details: `docs/architecture.md`, "SEO strategy". Tags are
-still set client-side only; server-side injection is not built yet.
+and absent from the sitemap until it has one. Details: `docs/architecture.md`, "SEO strategy". The server also
+injects the tags into the HTML it serves (`resolveRouteMeta`), so a new tool needs no server change.

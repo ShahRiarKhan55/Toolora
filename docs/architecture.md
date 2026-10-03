@@ -26,7 +26,7 @@ Items marked _(planned)_ are designed but not built yet.
                         │  apps/server (Express 5)                                            │
                         │   /api/*  health (+ future features)                                │
                         │   /sitemap.xml, /robots.txt (from the registry)                       │
-                        │   (planned) serve SPA, inject per-route SEO tags                    │
+                        │   serve SPA, inject per-route SEO tags                              │
                         │   Prisma 7 ─► SQLite (no models yet)                                │
                         └─────────────────────────────────────────────────────────────────────┘
 
@@ -114,7 +114,7 @@ given (via `ToolCard`, the same card used everywhere else) — it has no opinion
 is deliberately no second, hand-maintained "related tools" map: doing that risks drifting out of sync
 with the registry and pointing at a tool that no longer exists.
 
-### 5. SEO strategy _(Phase 5 done; server-side tag injection still planned)_
+### 5. SEO strategy _(Phases 5 and 8 done)_
 
 A pure Vite SPA serves the same `<head>` for every URL, which hurts crawlers and social previews that do
 not execute JavaScript. Instead of adopting an SSR framework, the Express server (already required for
@@ -143,8 +143,19 @@ static hosting.
 - **`sitemap.xml` / `robots.txt`** (`sitemap.ts`, served by `apps/server/src/routes/seo.ts`): generated
   per request from `TOOLS` and `CATEGORIES` (home, `/tools`, non-empty categories, every tool). `robots.txt`
   allows everything and lists the sitemap only when an origin is configured.
-- **Limitation.** These tags are still set client-side; crawlers/social scrapers that do not run
-  JavaScript see only `index.html`'s static head. Server-side injection remains to be built.
+- **Server-side injection (Phase 8).** `pageMeta.ts` in `packages/shared` is the single definition of each
+  route's metadata (registry-derived); pages feed it to `useDocumentMeta`, and `resolveRouteMeta(pathname,
+search, origin)` mirrors the router for the server. In production `createApp({ webDistDir })` mounts
+  `routes/spa.ts` _after_ `/api` and the SEO routes: static assets, then every other extension-less GET gets
+  `index.html` with the region between `<!--seo:start-->` and `<!--seo:end-->` replaced by `renderSeoHead`
+  output (title, description, robots, canonical, `og:*`, `twitter:*`, JSON-LD with the id
+  `page-structured-data`). Unknown routes and unknown tool slugs answer 404 with `noindex,follow` and no
+  canonical/`og:url`; empty categories answer 200 `noindex,follow`; `/tools?q=…` keeps canonical `/tools`.
+  All values are HTML-escaped; JSON-LD escapes `<`. Because the client hook upserts by selector, it updates
+  the server-rendered elements instead of adding new ones. Without `apps/web/dist` (dev, API tests) the
+  server serves only the API and SEO files; Vite serves the SPA with the static defaults between the markers.
+  The web bundle and the server must both see `VITE_PUBLIC_SITE_URL`. The SPA is still client-rendered
+  (no SSR): the page body is empty until JS runs; only head tags are server-rendered.
 
 ### Resilience and navigation _(Phase 6)_
 
@@ -252,9 +263,9 @@ Decisions and why:
   registry and a working search exist.
 - **SEO of the home page.** `index.html` carries the title, description, theme colour, favicon and basic
   Open Graph tags. A canonical URL and `og:url`/`og:image` are deliberately absent: they need the
-  production origin, which does not exist yet. Phase 5 sets them client-side from `VITE_PUBLIC_SITE_URL`;
-  server-side injection into this file is still to do. Other routes' tags are set by
-  `useDocumentMeta` (see "SEO strategy" above).
+  production origin, which does not exist yet. In production the server replaces the marked region of this
+  file per request (Phase 8); in dev the static defaults stay and `useDocumentMeta` sets the rest (see
+  "SEO strategy" above).
 
 ### 9. Toolchain pins
 

@@ -1,4 +1,4 @@
-import { CATEGORIES, getToolsByCategory, SITE_NAME, TOOLS } from '@toolora/shared';
+import { allToolsMeta, CATEGORIES, categoryListText, isCategoryId, TOOLS } from '@toolora/shared';
 import type { CategoryId } from '@toolora/shared';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -10,22 +10,8 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Input } from '../../components/ui/Input';
 import { SearchIcon } from '../../components/ui/icons';
-import { allToolsCanonicalPath } from '../../lib/allToolsCanonical';
 import { searchTools } from '../../lib/searchTools';
 import { useDocumentMeta } from '../../lib/useDocumentMeta';
-
-function isCategoryId(value: string | null): value is CategoryId {
-  return value !== null && CATEGORIES.some((category) => category.id === value);
-}
-
-/** "Japan, Student and Developer" — derived from the registry, never a hardcoded string. */
-function categoryListText(): string {
-  const names = CATEGORIES.filter((category) => getToolsByCategory(category.id).length > 0).map(
-    (category) => category.name,
-  );
-  if (names.length <= 1) return names.join('');
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-}
 
 export function AllToolsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,11 +20,7 @@ export function AllToolsPage() {
   const activeCategory = isCategoryId(categoryParam) ? categoryParam : null;
 
   // Search/filter query params never create a separate canonical page — see allToolsCanonicalPath.
-  useDocumentMeta({
-    title: `All Tools — ${SITE_NAME}`,
-    description: `Browse every Toolora tool: ${categoryListText()} utilities that run entirely in your browser.`,
-    path: allToolsCanonicalPath(activeCategory, query),
-  });
+  useDocumentMeta(allToolsMeta(activeCategory, query));
 
   const results = useMemo(() => {
     const matches = searchTools(TOOLS, query);

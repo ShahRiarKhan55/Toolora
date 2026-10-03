@@ -18,7 +18,7 @@ browser, so your input is never sent anywhere.
 - **`apps/web`** — React 19 + TypeScript + Vite + Tailwind CSS + React Router. All tool logic runs
   client-side; each tool is its own lazy-loaded chunk.
 - **`apps/server`** — Node.js + Express 5 + TypeScript. Health endpoint, `sitemap.xml` and `robots.txt`
-  (generated from the registry); serving the built SPA with server-injected SEO tags is still to do. Prisma 7 + SQLite for future persistence.
+  (generated from the registry); serves the built SPA with per-route SEO tags and JSON-LD injected into `index.html`. Prisma 7 + SQLite for future persistence.
 - **`packages/shared`** — framework-free TypeScript shared by both (the tool registry, categories, SEO
   helpers).
 - **Tests** — Vitest, React Testing Library, supertest. **Lint/format** — ESLint (with jsx-a11y) + Prettier.
@@ -113,7 +113,7 @@ Nothing is deployed and no hosting has been chosen. Things a deployment will nee
   optional `LOG_LEVEL`. Production logs are JSON lines on stdout. Set `VITE_PUBLIC_SITE_URL` to the real
   public origin (no trailing slash) **at build time** (the web bundle reads it) and at runtime (the server
   reads it) — canonical/OG/JSON-LD URLs and `sitemap.xml` need it; without it `sitemap.xml` returns 404.
-- Behind a reverse proxy/CDN, terminate TLS there. Serving the built SPA and injecting SEO tags from the server is still to do.
+- Behind a reverse proxy/CDN, terminate TLS there. `npm start` serves the built web app (`apps/web/dist`) itself, injecting per-route SEO tags; unknown routes return 404.
 - Any paid hosting, domain or service must be approved by the project owner first.
 
 ## License

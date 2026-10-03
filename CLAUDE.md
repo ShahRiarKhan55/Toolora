@@ -23,7 +23,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots            | done  |
 | 6     | Production readiness: route focus/scroll, error boundary, target sizes                | done  |
 | 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone) | done  |
-| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | next  |
+| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | done  |
 | 9–11  | Full test pass, lint/build, UX/a11y/perf review                                       |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
@@ -37,9 +37,9 @@ phases land.
 The app now has real routes (`react-router-dom`), a working tool registry with all 17 tools (10 MVP + 7 from Phase 7), and a
 client-side search over it (`apps/web/src/lib/searchTools.ts`). Phase 5 added the SEO foundation
 (see "SEO principles"): every page sets canonical/OG/Twitter/robots tags and JSON-LD client-side
-(`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. What's still
-outstanding: server-side injection of those tags into `index.html` (Phase 8) — client-set tags do not
-help crawlers/social previews that do not execute JavaScript. Phase 6 was an audit-driven polish pass
+(`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. Phase 8 made
+the server serve the built SPA and inject the same per-route tags (and JSON-LD) into `index.html`, so
+crawlers/social previews that do not run JavaScript see them (see "SEO principles"). Phase 6 was an audit-driven polish pass
 (see `docs/architecture.md`, "Resilience and navigation"); it added no features or dependencies.
 
 ## Architecture
@@ -48,7 +48,7 @@ npm-workspaces monorepo. **Every command is run from the repository root.**
 
 ```
 apps/web         React 19 + Vite 8 + Tailwind 4 SPA. All tool logic runs here, in the browser.
-apps/server      Express 5 API (+ later: serves the built SPA, injects SEO tags, sitemap/robots).
+apps/server      Express 5 API; also serves the built SPA with per-route SEO tags injected, plus sitemap/robots.
 packages/shared  Framework-free TypeScript shared by both (tool registry metadata, SEO helpers, site
                  constants). Shipped as *source* (package.json `exports` → src/index.ts); consumers'
                  bundlers compile it. It must not import React, Express or Node-only APIs.
@@ -128,7 +128,7 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
   route is derived — **`/tools/<slug>`, flat, not nested under its category** (`/tools/japan` is the
   _category_ page; a tool's own route is a sibling, e.g. `/tools/japanese-yen-converter`) — never
   stored twice. Homepage cards, category pages, search and per-route document title/description are
-  all generated from it; the sitemap/robots generation itself is still Phase 8. Nothing hard-codes a
+  all generated from it; the sitemap/robots and server-injected tags are generated from it too. Nothing hard-codes a
   tool list.
 - Tool **implementation** lives in `apps/web/src/tools/<tool-id>/`: `logic.ts` (pure, tested),
   `<Name>Tool.tsx` (UI built from shared components), `content.tsx` for the explanatory copy, tests.
@@ -174,8 +174,16 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
   (`apps/web/src/lib/useDocumentMeta.ts`), which owns title, description, robots, canonical, `og:*`,
   `twitter:*` and JSON-LD and clears whatever a page does not supply. Never set head tags any other way.
   The 404 page passes no `path` and `noindex,follow`; empty categories are `noindex,follow`; search/filter
-  query strings never get their own canonical. This is client-side only — the server still has to inject
-  route-specific tags into `index.html` (Phase 8) for crawlers that do not run JS.
+  query strings never get their own canonical.
+- **Server-injected head (Phase 8).** Per-route metadata is defined once in `packages/shared/src/pageMeta.ts`
+  (`homeMeta`, `categoryMeta`, `toolPageMeta`, `resolveRouteMeta`, ...). The pages pass it to
+  `useDocumentMeta`; in production `apps/server/src/routes/spa.ts` resolves the request path with
+  `resolveRouteMeta`, renders escaped tags (`seoHead.ts`) and replaces the `<!--seo:start-->…<!--seo:end-->`
+  region of the built `index.html` (unknown routes: HTTP 404 + `noindex,follow`, no canonical). The client
+  hook updates those same elements in place (no duplicates). New pages must get their metadata from
+  `pageMeta.ts` and a case in `resolveRouteMeta`, never a separate server table. Set `VITE_PUBLIC_SITE_URL`
+  at **web build time and server runtime**: a bundle built without it overwrites the server's absolute
+  canonicals/JSON-LD with relative ones after hydration. In dev (Vite) there is no injection.
 - **`VITE_PUBLIC_SITE_URL`** is the single production origin (no trailing slash), read by web and server
   and inlined into the web bundle at build time. Unset → relative canonicals, no JSON-LD, `sitemap.xml` 404. Never invent or placeholder it; set the real one for production builds.
 - `sitemap.xml`/`robots.txt` are generated from `TOOLS`/`CATEGORIES` (`packages/shared/src/sitemap.ts`,

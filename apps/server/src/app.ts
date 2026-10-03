@@ -7,6 +7,7 @@ import { errorHandler, routeNotFound } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { healthRouter } from './routes/health';
 import { seoRouter } from './routes/seo';
+import { spaRouter } from './routes/spa';
 
 export interface AppDeps {
   logger: Logger;
@@ -14,10 +15,13 @@ export interface AppDeps {
   /** The configured production origin; omit or pass undefined when none is set yet (e.g. in tests
    *  and local development) — see `config.ts` and `routes/seo.ts`. */
   publicSiteOrigin?: string;
+  /** The built web app (apps/web/dist). Omit when it has not been built (dev, API-only tests): the
+   *  server then serves only the API and SEO files. */
+  webDistDir?: string;
 }
 
 /** Builds the Express app without listening, so tests can drive it directly with supertest. */
-export function createApp({ logger, db, publicSiteOrigin }: AppDeps): Express {
+export function createApp({ logger, db, publicSiteOrigin, webDistDir }: AppDeps): Express {
   const app = express();
 
   app.use(helmet());
@@ -26,6 +30,7 @@ export function createApp({ logger, db, publicSiteOrigin }: AppDeps): Express {
 
   app.use(seoRouter({ publicSiteOrigin }));
   app.use('/api', healthRouter({ db, logger }));
+  if (webDistDir !== undefined) app.use(spaRouter({ webDistDir, publicSiteOrigin }));
 
   app.use(routeNotFound);
   app.use(errorHandler(logger));

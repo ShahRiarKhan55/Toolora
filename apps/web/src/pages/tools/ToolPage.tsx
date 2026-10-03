@@ -1,10 +1,4 @@
-import {
-  buildToolStructuredData,
-  CATEGORIES,
-  categoryRoute,
-  TOOLS,
-  toolRoute,
-} from '@toolora/shared';
+import { CATEGORIES, categoryRoute, TOOLS, toolPageMeta } from '@toolora/shared';
 import type { ToolMeta } from '@toolora/shared';
 import { Suspense } from 'react';
 import { ToolPageLayout } from '../../components/layout/ToolPageLayout';
@@ -16,12 +10,7 @@ import { TOOL_IMPLEMENTATIONS } from '../../tools';
 const categoryById = new Map(CATEGORIES.map((category) => [category.id, category]));
 
 export function ToolPage({ tool }: { tool: ToolMeta }) {
-  useDocumentMeta({
-    title: tool.seoTitle,
-    description: tool.seoDescription,
-    path: toolRoute(tool.slug),
-    structuredData: buildToolStructuredData(PUBLIC_SITE_ORIGIN, tool),
-  });
+  useDocumentMeta(toolPageMeta(tool, PUBLIC_SITE_ORIGIN));
   const category = categoryById.get(tool.category)!;
   const implementation = TOOL_IMPLEMENTATIONS[tool.id]!;
   const Component = implementation.Component;

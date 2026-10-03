@@ -1,4 +1,5 @@
 export * from './categories';
+export * from './pageMeta';
 export * from './site';
 export * from './sitemap';
 export * from './structuredData';
