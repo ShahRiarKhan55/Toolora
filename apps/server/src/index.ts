@@ -18,6 +18,7 @@ function main(): void {
   const app = createApp({
     logger,
     db,
+    secureCookies: config.nodeEnv === 'production',
     publicSiteOrigin: config.publicSiteOrigin,
     webDistDir: existsSync(join(webDistDir, 'index.html')) ? webDistDir : undefined,
   });

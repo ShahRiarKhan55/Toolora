@@ -1,11 +1,14 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { ACCOUNT_ROUTE } from '@toolora/shared';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../lib/authContext';
 import { PRIMARY_NAV } from '../../config/navigation';
 import { Logo } from '../brand/Logo';
 import { CloseIcon, MenuIcon } from '../ui/icons';
 import { Container } from './Container';
 
 function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: () => void }) {
+  const { status, user } = useAuth();
   return (
     <ul className={layout === 'bar' ? 'flex items-center gap-1' : 'flex flex-col py-2'}>
       {PRIMARY_NAV.map((item) => (
@@ -23,6 +26,21 @@ function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: 
           </Link>
         </li>
       ))}
+      {status === 'ready' && (
+        <li>
+          <Link
+            to={ACCOUNT_ROUTE}
+            onClick={onNavigate}
+            className={
+              layout === 'bar'
+                ? 'rounded-control px-3 py-2 text-sm font-semibold hover:bg-surface-muted'
+                : 'flex min-h-11 items-center rounded-control px-3 text-base font-semibold hover:bg-surface-muted'
+            }
+          >
+            {user ? 'Account' : 'Sign in'}
+          </Link>
+        </li>
+      )}
     </ul>
   );
 }

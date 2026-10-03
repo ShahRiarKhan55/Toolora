@@ -15,8 +15,8 @@ export function Footer() {
           <Logo />
           <p className="mt-3 max-w-sm text-muted-foreground">{SITE_TAGLINE}</p>
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-            Toolora has no accounts. Its tools are built to work in your browser, so what you type
-            into them is not sent to a server.
+            You do not need an account to use the tools. They are built to work in your browser, so
+            what you type into them is not sent to a server.
           </p>
         </div>
         <nav aria-label="Footer categories">

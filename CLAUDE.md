@@ -9,7 +9,8 @@ Toolora is a multi-purpose web toolbox: many genuinely useful, free online tools
 (Japan, Student, Developer; AI later). The plan is free tools → organic traffic → later monetization
 (premium features / ads). The MVP is ~10 polished tools, built so it can grow to 50–100+.
 
-The MVP deliberately has **no** auth, payments, ads, analytics or paid/external APIs. Do not add any
+The MVP deliberately has **no** payments, ads, analytics or paid/external APIs, and only a minimal optional
+account system (Phase 12; no tool needs it). Do not add any
 of these, or any paid service, without asking the owner first. Never deploy anything without asking.
 
 ## Status
@@ -27,7 +28,8 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 9     | Discovery: curated `related` links, populated-only category links, concise home       | done  |
 | 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests   | done  |
 | 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)  | done  |
-| 12    | Full test pass, lint/build, UX/a11y/perf review                                       |       |
+| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)         | done  |
+| 13    | Full test pass, lint/build, UX/a11y/perf review                                       |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -199,17 +201,24 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 `npm run build` then `NODE_ENV=production npm start` (from the repo root; `npm start` does not set `NODE_ENV`). Express sets helmet headers
 (CSP `script-src 'self'`, HSTS, ...) plus `Permissions-Policy`; **no CORS** (same-origin app - do not add it without a concrete
 cross-origin client). Caching: `/assets/*` immutable 1 y, HTML `no-cache`, `/api/*` `no-store`. Responses are not compressed by
-Express - the proxy/platform must do it. `/api/health` pings SQLite (no models exist, so the DB holds no data). Payments/accounts
-will need a real DB strategy and are deferred. Regression tests: `apps/server/tests/production.test.ts`.
+Express - the proxy/platform must do it. `/api/health` pings SQLite (the DB holds the accounts: run `npm run db:deploy` first).
+Payments will need a real DB strategy and are deferred. Regression tests: `apps/server/tests/production.test.ts`.
 
-## Accounts and entitlements (Phase 11 — groundwork only)
+## Accounts and entitlements (Phase 11 boundary, Phase 12 authentication)
 
-No accounts, payments, checkout or webhooks exist; all tools stay public. `ToolMeta.access` (default
+Real accounts exist (`User`, `Session`; email + scrypt password; HttpOnly cookie session under `/api/auth`, UI at
+`/account`) - see `docs/architecture.md`, 6b. Payments, subscriptions, checkout, webhooks, email verification,
+password reset and social login do **not** exist; all tools stay public and anonymous use must keep working.
+Authentication rules: only `resolveSubject(req, auth)` turns a request into a Subject (never read cookies/headers
+elsewhere for identity); never store or log passwords, raw session tokens or hashes; session tokens live only in the
+HttpOnly cookie (never URLs, `localStorage` or response bodies); state-changing `/api` routes must be same-origin
+JSON (`sameOriginJson`); no CORS; login failures stay one generic response; apply migrations with `npm run db:deploy`;
+rate limiting is absent and must be added in front of `/api/auth/*` before launch. Phase 11 groundwork: `ToolMeta.access` (default
 `'public'`) declares a future requirement; `apps/server/src/access.ts` decides (`canAccess`), and
-`resolveSubject` is the one place authentication will plug in (currently always anonymous). Rules: never trust
+`resolveSubject` is the one place a request becomes a Subject. Rules: never trust
 client-sent entitlement state; premium checks for server capabilities happen server-side; never put secrets in
 `VITE_*`; never store card data; payment webhooks must be signature-verified; auth errors are generic. No
-Prisma models yet — add them with the first real account feature (see `docs/architecture.md`, 6b).
+entitlement/payment models exist yet; add them with the payment phase.
 
 ## Accessibility and UI rules
 

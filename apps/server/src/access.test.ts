@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import { describe, expect, it } from 'vitest';
 import { accessLevelOf, ANONYMOUS, canAccess, resolveSubject } from './access';
 import type { Subject } from './access';
@@ -42,8 +43,20 @@ describe('access evaluation', () => {
 });
 
 describe('resolveSubject', () => {
-  it('is anonymous, and takes no request so client claims cannot influence it', () => {
-    expect(resolveSubject()).toEqual({ kind: 'anonymous' });
-    expect(resolveSubject.length).toBe(0);
+  const req = {} as Request;
+
+  it('is anonymous when the request carries no valid session', async () => {
+    await expect(
+      resolveSubject(req, { userFromRequest: () => Promise.resolve(null) }),
+    ).resolves.toEqual({ kind: 'anonymous' });
+  });
+
+  it('is a user with no entitlements for a verified session, so access stays public', async () => {
+    const subject = await resolveSubject(req, {
+      userFromRequest: () => Promise.resolve({ id: 'u1', email: 'a@b.test' }),
+    });
+    expect(subject).toEqual({ kind: 'user', userId: 'u1', entitlements: [] });
+    expect(canAccess(subject, 'public', NOW)).toBe(true);
+    expect(canAccess(subject, 'premium', NOW)).toBe(false);
   });
 });

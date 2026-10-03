@@ -1,5 +1,5 @@
-// The MVP tools run entirely in the browser, so there are deliberately no models yet.
-// The first model arrives together with the first feature that genuinely needs persistence.
+// Accounts and sessions only (Phase 12). Entitlements, payments and subscriptions are deliberately
+// not modelled yet - they arrive with the payment phase (see docs/architecture.md, 6b).
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +8,26 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  /// Trimmed and lower-cased before every lookup and write (see apps/server/src/auth.ts).
+  email        String    @unique
+  /// scrypt hash string with its own salt and cost parameters; never the password.
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  /// SHA-256 of the session token; the raw token only ever exists in the user's cookie.
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
 }

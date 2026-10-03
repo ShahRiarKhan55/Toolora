@@ -2,6 +2,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import { RouteChangeHandler } from './components/layout/RouteChangeHandler';
 import { SiteLayout } from './components/layout/SiteLayout';
+import { AccountPage } from './pages/account/AccountPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { HomePage } from './pages/home/HomePage';
 import { AllToolsPage } from './pages/tools/AllToolsPage';
@@ -16,6 +17,7 @@ export function App() {
       <ErrorBoundary key={pathname}>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/tools" element={<AllToolsPage />} />
           <Route path="/tools/:param" element={<ToolsSlugRoute />} />
           <Route path="*" element={<NotFoundPage />} />

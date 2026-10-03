@@ -29,7 +29,7 @@ describe('GET /api/health', () => {
   it('reports degraded with 503 when the database is unavailable, without leaking the reason', async () => {
     const brokenApp = createApp({
       logger: silentLogger,
-      db: { ping: () => Promise.reject(new Error('unable to open /var/db/private.sqlite')) },
+      db: { ...db, ping: () => Promise.reject(new Error('unable to open /var/db/private.sqlite')) },
     });
 
     const res = await request(brokenApp).get('/api/health');

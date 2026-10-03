@@ -1,17 +1,21 @@
 import express from 'express';
 import type { Express } from 'express';
 import helmet from 'helmet';
+import { createAuth } from './auth/auth';
 import type { Database } from './db';
 import type { Logger } from './logger';
 import { errorHandler, routeNotFound } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
+import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
 import { seoRouter } from './routes/seo';
 import { spaRouter } from './routes/spa';
 
 export interface AppDeps {
   logger: Logger;
-  db: Pick<Database, 'ping'>;
+  db: Pick<Database, 'ping' | 'prisma'>;
+  /** True in production (HTTPS): the session cookie is then Secure and `__Host-` prefixed. */
+  secureCookies?: boolean;
   /** The configured production origin; omit or pass undefined when none is set yet (e.g. in tests
    *  and local development) — see `config.ts` and `routes/seo.ts`. */
   publicSiteOrigin?: string;
@@ -21,7 +25,13 @@ export interface AppDeps {
 }
 
 /** Builds the Express app without listening, so tests can drive it directly with supertest. */
-export function createApp({ logger, db, publicSiteOrigin, webDistDir }: AppDeps): Express {
+export function createApp({
+  logger,
+  db,
+  secureCookies = false,
+  publicSiteOrigin,
+  webDistDir,
+}: AppDeps): Express {
   const app = express();
 
   app.use(helmet());
@@ -40,6 +50,7 @@ export function createApp({ logger, db, publicSiteOrigin, webDistDir }: AppDeps)
     next();
   });
   app.use('/api', healthRouter({ db, logger }));
+  app.use('/api/auth', authRouter({ auth: createAuth({ prisma: db.prisma, secureCookies }) }));
   if (webDistDir !== undefined) app.use(spaRouter({ webDistDir, publicSiteOrigin }));
 
   app.use(routeNotFound);

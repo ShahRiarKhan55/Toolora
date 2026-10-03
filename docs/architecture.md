@@ -27,7 +27,7 @@ Items marked _(planned)_ are designed but not built yet.
                         │   /api/*  health (+ future features)                                │
                         │   /sitemap.xml, /robots.txt (from the registry)                       │
                         │   serve SPA, inject per-route SEO tags                              │
-                        │   Prisma 7 ─► SQLite (no models yet)                                │
+                        │   Prisma 7 ─► SQLite (User, Session)                                │
                         └─────────────────────────────────────────────────────────────────────┘
 
            packages/shared: registry metadata, SEO helpers, constants — imported by both apps
@@ -191,12 +191,13 @@ search, origin)` mirrors the router for the server. In production `createApp({ w
 
 ### 6. Database
 
-Prisma 7 + SQLite via `@prisma/adapter-better-sqlite3`. **There are no models yet**: every MVP tool
-runs in the browser, so nothing needs storing. `/api/health` runs `SELECT 1` through the real adapter,
-so the wiring is exercised and tested (in-memory SQLite). The first model arrives with the first feature
-that truly needs persistence; a candidate is a "suggest a tool" form (the brief mentions adding
-categories "based on user demand"), which would store user-submitted text and therefore needs an explicit
-go-ahead and a privacy note first.
+Prisma 7 + SQLite via `@prisma/adapter-better-sqlite3`. Every tool runs in the browser and stores
+nothing; the only models are `User` and `Session` (Phase 12, see 6b), created by the migration in
+`prisma/migrations/`. Apply migrations with `npm run db:deploy` (`db:migrate` is the dev-time
+equivalent that also generates new ones). `/api/health` runs `SELECT 1` through the real adapter. Server
+tests build an in-memory database from the real migration files (`apps/server/tests/migratedDb.ts`), so
+tests run against the shipped schema. A candidate future feature is a "suggest a tool" form, which would
+store user-submitted text and therefore needs an explicit go-ahead and a privacy note first.
 
 SQLite URLs are resolved against the process working directory, and Prisma's CLI does the same, so all
 commands must run from the repo root (they do, via the root npm scripts).
@@ -211,40 +212,98 @@ Express (TLS and compression belong to the proxy/platform; adding `compression` 
 without one). Dotfiles are ignored by `express.static`; paths ending in an extension never fall back to HTML. Tests:
 `apps/server/tests/production.test.ts`.
 
-### 6b. Accounts and entitlements _(Phase 11 — boundary only, nothing enforced)_
+### 6b. Accounts and entitlements _(Phase 11 boundary, Phase 12 real authentication)_
 
-**Today.** Every tool is public and runs in the browser. Accounts are not required because no tool needs
-persistence or server capability; there is no login, no user table, no payment code and no premium UI.
-Payments, subscriptions, checkout and webhooks are **not implemented**.
+**Today.** Every tool is public and runs in the browser; no tool needs an account. Phase 12 added a small
+real account system (register, sign in, sign out, a server-verified session) and connected it to the
+Phase 11 access model. **Payments, subscriptions, checkout, pricing, webhooks, email verification, password
+reset and social login are not implemented**, and no tool is premium.
 
-**Database decision: keep SQLite/Prisma, add no models yet (option A, deferred).** The repo has no models,
-no `prisma/migrations/` and a git-ignored dev DB, so a `User`/`Entitlement` table today would have no writer
-and no reader. The additive schema is straightforward when the first account feature lands: `User` (id,
-created-at), `Entitlement` (userId, `level`, `expiresAt`, optional provider-neutral `externalCustomerId` /
-`externalSubscriptionId`), created with the first migration. Never store card data. Usage limits (if ever
-needed) would be a counter table keyed by user + capability; not designed further until required.
+**Account model** (`prisma/schema.prisma`, migration `20261003000000_accounts_and_sessions`):
 
-**Boundaries that exist now:**
+- `User`: `id` (uuid), `email` (unique; trimmed and lower-cased on every write and lookup), `passwordHash`,
+  `createdAt`. There is no entitlement table: nothing writes entitlements yet (see "future payment flow").
+- `Session`: `id`, `tokenHash` (unique), `userId`, `createdAt`, `expiresAt`.
 
-- _Declaration_ — `ToolMeta.access?: AccessLevel` (`packages/shared/src/access.ts`; `'public'` | `'premium'`,
-  omitted = public). The registry stays the source of truth; read it with `requiredAccess(tool)`. Nothing
-  enforces it and every tool is public (tested).
-- _Decision_ — `apps/server/src/access.ts`: `Subject` (anonymous | user + `Entitlement[]`), `accessLevelOf`
-  and `canAccess(subject, required, now)`: pure, deterministic, expired entitlements ignored. It lives in the
-  server so the web bundle cannot import it.
-- _Identity_ — `resolveSubject(req)` is the single seam where authentication will plug in. It returns
-  anonymous and ignores every header/cookie/query/body value, so a client claim of "premium" can never count.
+**Passwords** (`apps/server/src/auth/password.ts`). scrypt from `node:crypto` (memory-hard, no dependency),
+N=2^16, r=8, p=1, 16-byte random salt, NFKC-normalized input. The stored string is
+`scrypt$N$r$p$salt$hash`, so the cost can be raised later without invalidating old hashes. Comparison is
+`timingSafeEqual`. Policy: 10-128 characters, no composition rules (NIST 800-63B); the upper bound limits
+hashing work per request. There is no breached/common-password check yet.
 
-**Future payment flow (not built):** browser → Toolora server (starts checkout) → payment provider → signed
-webhook → server verifies the signature → server writes the `Entitlement` → later requests resolve the subject
-from the server-side session and read that row. The browser is never told to, nor trusted to, say a payment
-succeeded. Payment processing is deferred because it needs an owner decision on provider, pricing, legal/tax
-and a real database strategy, and no premium capability exists to sell.
+**Sessions** (`apps/server/src/auth/auth.ts`). A 32-byte random token (`randomBytes`), sent only in a cookie;
+the database stores its SHA-256, so a leaked database cannot be replayed (SHA-256 is acceptable because the
+token is high-entropy, unlike a password). Lifetime is a fixed 14 days from sign-in (no sliding renewal);
+expired sessions are rejected and deleted on use, and a user's expired rows are pruned on their next sign-in.
+Register and login always issue a new token and delete the session the request carried (no fixation);
+logout deletes the row and clears the cookie.
+
+**Cookie.** `HttpOnly`, `SameSite=Lax`, `Path=/`, no `Domain`, expires with the session. In production it is
+also `Secure` and named `__Host-toolora_session` (browsers then refuse it unless Secure, Path=/ and
+Domain-less). Outside production it is `toolora_session` and not Secure so plain-HTTP development works.
+No token is in a URL, in `localStorage` or in any response body; the web app only ever sees `{ id, email }`.
+
+**API** (all JSON, all under `/api/auth`, `Cache-Control: no-store`):
+
+| Route            | Result                                                                        |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `POST /register` | 201 `{ user }` + cookie; 400 invalid email/password; 409 `email_in_use`       |
+| `POST /login`    | 200 `{ user }` + cookie; 401 one generic `invalid_credentials`; 400 malformed |
+| `GET /session`   | 200 `{ user }` or `{ user: null }` (also for invalid or expired cookies)      |
+| `POST /logout`   | 200 `{ user: null }`, cookie cleared; fine when already signed out            |
+
+Login answers identically for an unknown email and a wrong password and hashes a dummy value for unknown
+emails to keep timing alike. **Registration necessarily reveals that an email is taken** (409): without
+email verification there is no way to tell the user without telling an enumerator. Unknown routes and wrong
+methods stay JSON 404s; failures never expose database errors.
+
+**CSRF** (`sameOriginJson` in `routes/auth.ts`). The cookie is `SameSite=Lax` (not attached to cross-site
+POSTs), every state-changing request must be `application/json` (a cross-site HTML form cannot send it, and
+there is no CORS, so a foreign page cannot get a preflight approved), and it must be same-origin by
+`Sec-Fetch-Site` or, where a browser omits that, an `Origin` whose host equals `Host`. No token framework:
+the app is same-origin, has no cross-origin client and no state-changing GET. Limits: a request with neither
+header (a non-browser client) is accepted, which is not a CSRF vector; a proxy that rewrites `Host` breaks the
+fallback check for old browsers; sibling subdomains are not defended against if other apps ever share the
+domain; `SameSite=Lax` is browser behaviour, not a server guarantee.
+
+**`resolveSubject(req, auth)`** (`apps/server/src/access.ts`) is the one place HTTP becomes an access subject:
+request -> `resolveSubject` -> anonymous or `{ kind: 'user', userId, entitlements: [] }` -> `canAccess`. It
+trusts only the session cookie, verified against the session table; no header, query or body value can name
+a user or an entitlement (tested). `canAccess` stays pure and HTTP-free. Entitlements are always empty, so a
+signed-in user holds `public` exactly like an anonymous visitor; `/api/auth/session` is the only caller
+today and nothing is gated.
+
+**Boundaries from Phase 11 (unchanged).** _Declaration_ - `ToolMeta.access?: AccessLevel`, read with
+`requiredAccess(tool)`; every tool is public (tested). _Decision_ - `Subject`, `accessLevelOf`,
+`canAccess(subject, required, now)`: pure, deterministic, expired entitlements ignored; it lives in the
+server so the web bundle cannot import it.
+
+**Future payment flow (not built):** browser -> Toolora server (starts checkout) -> payment provider ->
+signed webhook -> server verifies the signature -> server writes an `Entitlement` row (a new model, added
+with the payment phase) -> `resolveSubject` reads it for the session's user. The browser is never trusted
+to say a payment succeeded. Never store card data.
+
+**Web.** `/account` (noindex, outside the sitemap) has the sign-in/create-account form and the signed-in
+state; the header shows "Sign in" or "Account". `AuthProvider` asks `/api/auth/session` once on load.
+
+**Limitations and production notes.**
+
+- **No brute-force or rate limiting.** Scrypt makes each guess costly for the server too, so unthrottled
+  login/register is also a CPU/memory DoS surface. Put rate limiting in front of `/api/auth/*` before launch.
+- No email verification, password reset, account deletion/change, "sign out everywhere" or common-password
+  check. A forgotten password cannot be recovered yet.
+- Sessions are a fixed 14 days, with no idle timeout and no device list.
+- HTTPS is required in production (Secure cookie). The proxy must preserve `Host`. Node needs no
+  `trust proxy` setting: `Secure` is set from `NODE_ENV`, not from the connection.
+- The SQLite file holds the accounts: it needs a persistent volume and backups. SQLite suits one server
+  instance; scaling out means a different database.
+- Logs carry method, path, status, duration and request id only; credentials, tokens and hashes are never
+  logged (tested), and 5xx messages are generic.
 
 **Rules:** entitlement state is never trusted from the client; premium access to any server capability is
 authorised server-side via `canAccess`; no secret goes in a `VITE_*` variable; webhooks must be signature-
-verified before they change state; auth failures use one generic response so account existence never leaks;
-anonymous use stays supported for every public tool.
+verified before they change state; auth failures use one generic response; anonymous use stays supported for
+every public tool.
 
 ### 7. Errors and logging
 

@@ -35,6 +35,7 @@ More in [`docs/architecture.md`](./docs/architecture.md) and [`docs/tools.md`](.
 
 ```bash
 npm install        # installs all workspaces and generates the Prisma client
+npm run db:deploy  # creates/updates the SQLite file (accounts); the tools themselves need no database
 ```
 
 Optional: copy `.env.example` to `.env` to override the defaults (port, database file, log level).
@@ -55,6 +56,7 @@ Run everything **from the repository root**.
 | `npm run check`                          | Format check + lint + typecheck + test + build                  |
 | `npm start`                              | Run the built server                                            |
 | `npm run db:generate` / `db:migrate`     | Prisma client generation / dev migrations                       |
+| `npm run db:deploy`                      | Apply the committed migrations (local setup and deployment)     |
 
 If port 5173 is already used by another project, Vite automatically picks the next free port — read the
 URL it prints.
@@ -68,7 +70,7 @@ toolora/
 │  └─ server/         Express API (src/, tests/, build.mjs)
 ├─ packages/
 │  └─ shared/         Shared TypeScript source (src/)
-├─ prisma/            schema.prisma (+ migrations/ once a model exists)
+├─ prisma/            schema.prisma + migrations/ (User, Session)
 ├─ docs/              architecture.md, tools.md (registry, routing, adding a tool)
 ├─ CLAUDE.md          Working rules for contributors and AI agents
 ├─ eslint.config.js, .prettierrc.json, tsconfig*.json, vitest.config.ts, prisma.config.ts
@@ -109,13 +111,18 @@ Nothing is deployed and no hosting has been chosen. Things a deployment will nee
   start from the repo root with `npm start` (paths such as the SQLite file are relative to the working
   directory). Do not use `npm ci --omit=dev`: the install-time `prisma generate` needs the dev-only
   `prisma` CLI, and `--ignore-scripts` would skip the `better-sqlite3` native binary.
-- Environment: `NODE_ENV=production`, `PORT`, `DATABASE_URL` (a persistent path if a model is ever added),
+- Run `npm run db:deploy` against the production `DATABASE_URL` before the first start and after every
+  deploy that adds a migration. Accounts need it: without the tables, register/login answer 500.
+- Accounts: the session cookie is `Secure` in production, so serve over HTTPS and have the proxy preserve
+  `Host`. Put rate limiting/abuse protection in front of `/api/auth/*` before launch (the app has none;
+  see `docs/architecture.md`, 6b).
+- Environment: `NODE_ENV=production`, `PORT`, `DATABASE_URL` (a persistent path: it holds the accounts),
   optional `LOG_LEVEL`. Production logs are JSON lines on stdout. Set `VITE_PUBLIC_SITE_URL` to the real
   public origin (no trailing slash) **at build time** (the web bundle reads it) and at runtime (the server
   reads it) — canonical/OG/JSON-LD URLs and `sitemap.xml` need it; without it `sitemap.xml` returns 404.
 - `npm start` does **not** set `NODE_ENV`; without it the server runs in development mode (debug logs, not JSON). Set `NODE_ENV=production` in the environment.
 - Behind a reverse proxy/CDN, terminate TLS there. `npm start` serves the built web app (`apps/web/dist`) itself, injecting per-route SEO tags; unknown routes return 404. The server does **not** compress responses: have the proxy/platform gzip or brotli them (the main JS is ~331 kB raw, ~103 kB gzip).
-- Health check: `GET /api/health` → 200 `{status:"ok",...}`, 503 if the SQLite file cannot be queried. It needs no auth and reveals no internals. SQLite holds no data today (no models), so a read-only or ephemeral filesystem is fine apart from that ping.
+- Health check: `GET /api/health` → 200 `{status:"ok",...}`, 503 if the SQLite file cannot be queried. It needs no auth and reveals no internals. SQLite holds the accounts and sessions, so it needs a persistent, writable volume.
 - HTTP behaviour (all in `apps/server`, tests in `tests/production.test.ts`): helmet headers incl. CSP (`script-src 'self'`), HSTS, `Permissions-Policy`; no CORS headers (same-origin only); `/assets/*` is `immutable` for a year, HTML is `no-cache`, `/api/*` is `no-store`; dotfiles, source and config files are never served, and `/api/*` or missing `*.ext` paths get a JSON 404, not the SPA shell.
 - Shutdown: SIGINT/SIGTERM stop accepting connections, close the database and exit (forced after 10 s).
 - Any paid hosting, domain or service must be approved by the project owner first.

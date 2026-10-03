@@ -20,6 +20,11 @@ describe('App routing', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders the account page at /account', () => {
+    renderAt('/account');
+    expect(screen.getByRole('heading', { level: 1, name: 'Account' })).toBeInTheDocument();
+  });
+
   it('renders the All Tools page at /tools', () => {
     renderAt('/tools');
     expect(screen.getByRole('heading', { level: 1, name: 'All Tools' })).toBeInTheDocument();

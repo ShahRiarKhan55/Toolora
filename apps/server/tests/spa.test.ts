@@ -94,6 +94,14 @@ describe('server-rendered SEO head', () => {
     expect(res.text).toContain('<meta name="robots" content="noindex,follow" />');
   });
 
+  it('account page: served as 200 but noindex, and absent from the sitemap', async () => {
+    const res = await request(app()).get('/account');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('<title>Account — Toolora</title>');
+    expect(res.text).toContain('<meta name="robots" content="noindex,follow" />');
+    expect((await request(app()).get('/sitemap.xml')).text).not.toContain('/account');
+  });
+
   it('every registered tool gets its registry title, description, canonical and JSON-LD', async () => {
     for (const tool of TOOLS) {
       const res = await request(app()).get(`/tools/${tool.slug}`);

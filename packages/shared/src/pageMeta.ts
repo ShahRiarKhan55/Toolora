@@ -4,7 +4,7 @@
 
 import type { CategoryId } from './categories';
 import { CATEGORIES, CATEGORY_IDS } from './categories';
-import { HOME_ROUTE, SITE_NAME } from './site';
+import { ACCOUNT_ROUTE, HOME_ROUTE, SITE_NAME } from './site';
 import type { StructuredData } from './structuredData';
 import { buildToolStructuredData, buildWebSiteStructuredData } from './structuredData';
 import type { ToolMeta } from './tools';
@@ -101,9 +101,17 @@ export const NOT_FOUND_META: PageMeta = {
   robots: 'noindex,follow',
 };
 
+// Indexable pages never depend on it, so a sign-in form stays out of search results.
+export const ACCOUNT_META: PageMeta = {
+  title: `Account — ${SITE_NAME}`,
+  description: `Sign in to or create a ${SITE_NAME} account. No account is needed to use the tools.`,
+  path: ACCOUNT_ROUTE,
+  robots: 'noindex,follow',
+};
+
 /**
  * Resolves a request pathname (+ query string) to its metadata, mirroring the web router
- * (`/`, `/tools`, `/tools/<category|slug>`, everything else 404). `status` is the HTTP status the
+ * (`/`, `/account`, `/tools`, `/tools/<category|slug>`, everything else 404). `status` is the HTTP status the
  * server should answer with.
  */
 export function resolveRouteMeta(
@@ -114,6 +122,7 @@ export function resolveRouteMeta(
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
 
   if (path === HOME_ROUTE) return { meta: homeMeta(origin), status: 200 };
+  if (path === ACCOUNT_ROUTE) return { meta: ACCOUNT_META, status: 200 };
 
   if (path === ALL_TOOLS_ROUTE) {
     const params = new URLSearchParams(search);

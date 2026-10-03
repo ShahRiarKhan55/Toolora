@@ -1,5 +1,7 @@
 import { ACCESS_LEVELS, meetsAccessLevel } from '@toolora/shared';
 import type { AccessLevel } from '@toolora/shared';
+import type { Request } from 'express';
+import type { Auth } from './auth/auth';
 
 // Server-side authority on "who may use what". Lives in apps/server (not shared) so the browser
 // bundle cannot import it and nothing client-side can pose as the decision-maker.
@@ -17,12 +19,19 @@ export type Subject =
 export const ANONYMOUS: Subject = { kind: 'anonymous' };
 
 /**
- * Who is making this request. Authentication does not exist yet, so this is always anonymous and
- * takes no request on purpose, so no header, cookie, query or body value can make anyone premium.
- * When accounts arrive, add a parameter for a verified server-side session only.
+ * Who is making this request: the one boundary between HTTP and the access model. The only input
+ * trusted is the HttpOnly session cookie, verified against the server's own session store. No
+ * header, query or body value can name a user or an entitlement.
+ *
+ * Entitlements are always empty until the payment phase adds a server-written source for them, so
+ * a signed-in user holds `public` access exactly like an anonymous visitor.
  */
-export function resolveSubject(): Subject {
-  return ANONYMOUS;
+export async function resolveSubject(
+  req: Request,
+  auth: Pick<Auth, 'userFromRequest'>,
+): Promise<Subject> {
+  const user = await auth.userFromRequest(req);
+  return user ? { kind: 'user', userId: user.id, entitlements: [] } : ANONYMOUS;
 }
 
 /** The highest level `subject` holds at `now`; expired entitlements are ignored. */
