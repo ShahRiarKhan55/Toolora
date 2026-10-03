@@ -201,6 +201,16 @@ go-ahead and a privacy note first.
 SQLite URLs are resolved against the process working directory, and Prisma's CLI does the same, so all
 commands must run from the repo root (they do, via the root npm scripts).
 
+### 6a. Production HTTP behaviour _(Phase 10)_
+
+The built server is self-contained (no Vite). helmet supplies CSP (no inline scripts exist in the build; JSON-LD is
+non-executable), HSTS, nosniff, frame and referrer policy; `app.ts` adds `Permissions-Policy` and `Cache-Control: no-store` on
+`/api`. `routes/spa.ts` serves `/assets` as `immutable` for a year (Vite hashes the names) and everything else with
+revalidation; HTML is `no-cache` so deploys never serve stale SEO tags. There is deliberately no CORS and no compression in
+Express (TLS and compression belong to the proxy/platform; adding `compression` is a later option if Toolora is ever exposed
+without one). Dotfiles are ignored by `express.static`; paths ending in an extension never fall back to HTML. Tests:
+`apps/server/tests/production.test.ts`.
+
 ### 7. Errors and logging
 
 - `config.ts` validates the environment with zod at startup and fails fast with a readable message.

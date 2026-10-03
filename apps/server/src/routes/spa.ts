@@ -23,7 +23,13 @@ export function spaRouter({
   }
 
   const router = Router();
-  router.use(express.static(webDistDir, { index: false }));
+  // Vite fingerprints everything in /assets, so those files never change under the same name.
+  router.use(
+    '/assets',
+    express.static(join(webDistDir, 'assets'), { index: false, maxAge: '1y', immutable: true }),
+  );
+  // Everything else (favicon, ...) is unhashed: revalidate on each use via ETag.
+  router.use(express.static(webDistDir, { index: false, maxAge: 0 }));
 
   router.get(/.*/, (req, res, next) => {
     // /api keeps its JSON 404, and a missing file (/assets/x.js) must not come back as an HTML page.
@@ -35,9 +41,11 @@ export function spaRouter({
       ? req.originalUrl.slice(req.originalUrl.indexOf('?'))
       : '';
     const { meta, status } = resolveRouteMeta(req.path, search, publicSiteOrigin);
+    // Revalidate HTML on every load so a deploy's new asset hashes and SEO tags are never stale.
     res
       .status(status)
       .type('html')
+      .set('Cache-Control', 'no-cache')
       .send(injectSeoHead(template, renderSeoHead(meta, publicSiteOrigin)));
   });
 

@@ -113,7 +113,11 @@ Nothing is deployed and no hosting has been chosen. Things a deployment will nee
   optional `LOG_LEVEL`. Production logs are JSON lines on stdout. Set `VITE_PUBLIC_SITE_URL` to the real
   public origin (no trailing slash) **at build time** (the web bundle reads it) and at runtime (the server
   reads it) — canonical/OG/JSON-LD URLs and `sitemap.xml` need it; without it `sitemap.xml` returns 404.
-- Behind a reverse proxy/CDN, terminate TLS there. `npm start` serves the built web app (`apps/web/dist`) itself, injecting per-route SEO tags; unknown routes return 404.
+- `npm start` does **not** set `NODE_ENV`; without it the server runs in development mode (debug logs, not JSON). Set `NODE_ENV=production` in the environment.
+- Behind a reverse proxy/CDN, terminate TLS there. `npm start` serves the built web app (`apps/web/dist`) itself, injecting per-route SEO tags; unknown routes return 404. The server does **not** compress responses: have the proxy/platform gzip or brotli them (the main JS is ~331 kB raw, ~103 kB gzip).
+- Health check: `GET /api/health` → 200 `{status:"ok",...}`, 503 if the SQLite file cannot be queried. It needs no auth and reveals no internals. SQLite holds no data today (no models), so a read-only or ephemeral filesystem is fine apart from that ping.
+- HTTP behaviour (all in `apps/server`, tests in `tests/production.test.ts`): helmet headers incl. CSP (`script-src 'self'`), HSTS, `Permissions-Policy`; no CORS headers (same-origin only); `/assets/*` is `immutable` for a year, HTML is `no-cache`, `/api/*` is `no-store`; dotfiles, source and config files are never served, and `/api/*` or missing `*.ext` paths get a JSON 404, not the SPA shell.
+- Shutdown: SIGINT/SIGTERM stop accepting connections, close the database and exit (forced after 10 s).
 - Any paid hosting, domain or service must be approved by the project owner first.
 
 ## License

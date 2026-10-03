@@ -25,10 +25,20 @@ export function createApp({ logger, db, publicSiteOrigin, webDistDir }: AppDeps)
   const app = express();
 
   app.use(helmet());
+  // helmet has no Permissions-Policy; no tool needs any of these browser features.
+  app.use((_req, res, next) => {
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+    next();
+  });
   app.use(requestLogger(logger));
   app.use(express.json({ limit: '100kb' }));
 
   app.use(seoRouter({ publicSiteOrigin }));
+  // API responses are live state, never cacheable.
+  app.use('/api', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
   app.use('/api', healthRouter({ db, logger }));
   if (webDistDir !== undefined) app.use(spaRouter({ webDistDir, publicSiteOrigin }));
 

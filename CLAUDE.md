@@ -25,7 +25,8 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone) | done  |
 | 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | done  |
 | 9     | Discovery: curated `related` links, populated-only category links, concise home       | done  |
-| 10–11 | Full test pass, lint/build, UX/a11y/perf review                                       |       |
+| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests   | done  |
+| 11    | Full test pass, lint/build, UX/a11y/perf review                                       |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -191,6 +192,14 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
   served by `apps/server/src/routes/seo.ts`); never hand-list URLs. JSON-LD is `WebSite` (home) and
   `WebApplication` (tools) from registry data only — no ratings, reviews, prices or organization claims.
 - Lazy-load tools, keep bundles small, and keep layout stable (Core Web Vitals).
+
+## Production serving (Phase 10)
+
+`npm run build` then `NODE_ENV=production npm start` (from the repo root; `npm start` does not set `NODE_ENV`). Express sets helmet headers
+(CSP `script-src 'self'`, HSTS, ...) plus `Permissions-Policy`; **no CORS** (same-origin app - do not add it without a concrete
+cross-origin client). Caching: `/assets/*` immutable 1 y, HTML `no-cache`, `/api/*` `no-store`. Responses are not compressed by
+Express - the proxy/platform must do it. `/api/health` pings SQLite (no models exist, so the DB holds no data). Payments/accounts
+will need a real DB strategy and are deferred. Regression tests: `apps/server/tests/production.test.ts`.
 
 ## Accessibility and UI rules
 
