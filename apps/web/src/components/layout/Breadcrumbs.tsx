@@ -11,7 +11,7 @@ export interface BreadcrumbItem {
 export function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+      <ol className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           return (
@@ -20,7 +20,7 @@ export function Breadcrumbs({ items }: { items: readonly BreadcrumbItem[] }) {
                 {item.href && !isLast ? (
                   <Link
                     to={item.href}
-                    className="underline-offset-2 hover:text-foreground hover:underline"
+                    className="inline-flex min-h-11 items-center underline-offset-2 hover:text-foreground hover:underline"
                   >
                     {item.label}
                   </Link>

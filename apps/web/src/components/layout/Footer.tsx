@@ -4,7 +4,8 @@ import { ALL_TOOLS_HREF, CATEGORY_NAV } from '../../config/navigation';
 import { Logo } from '../brand/Logo';
 import { Container } from './Container';
 
-const linkStyles = 'text-muted-foreground underline-offset-2 hover:text-foreground hover:underline';
+const linkStyles =
+  'inline-flex min-h-11 items-center text-muted-foreground underline-offset-2 hover:text-foreground hover:underline';
 
 export function Footer() {
   return (
@@ -20,7 +21,7 @@ export function Footer() {
         </div>
         <nav aria-label="Footer categories">
           <h2 className="text-sm font-semibold">Categories</h2>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-1">
             {CATEGORY_NAV.map((item) => (
               <li key={item.href}>
                 <Link to={item.href} className={linkStyles}>
@@ -32,7 +33,7 @@ export function Footer() {
         </nav>
         <nav aria-label="Footer site">
           <h2 className="text-sm font-semibold">Toolora</h2>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-1">
             <li>
               <Link to="/" className={linkStyles}>
                 Home

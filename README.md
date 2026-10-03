@@ -5,7 +5,7 @@ Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grou
 word counter) and **Developer** (JSON formatter, Base64, UUID generator, Unix timestamp converter). All
 10 tools run entirely in your browser, so your input is never sent anywhere.
 
-> **Status: early development (Phase 5 of 11).** The repository has the monorepo, tooling, the design
+> **Status: early development (Phase 6 of 11).** The repository has the monorepo, tooling, the design
 > system and app shell, a working API skeleton, real routing (`react-router-dom`), a tool registry, and
 > the first 10 tools — all working, tested and searchable/filterable at `/tools`, with related-tools
 > navigation on every tool page, and a client-side SEO foundation (canonical/Open Graph/Twitter tags,

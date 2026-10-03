@@ -146,6 +146,20 @@ static hosting.
 - **Limitation.** These tags are still set client-side; crawlers/social scrapers that do not run
   JavaScript see only `index.html`'s static head. Server-side injection remains to be built.
 
+### Resilience and navigation _(Phase 6)_
+
+- **Route changes.** `RouteChangeHandler` scrolls to the top and focuses `<main>` when the _pathname_
+  changes (not for `?q=`/`?category=` changes), because client-side navigation otherwise leaves keyboard
+  and screen-reader users on the old link at the old scroll position.
+- **Error boundary.** `ErrorBoundary` wraps the routes (keyed by path, inside the shell so header and
+  footer survive). It catches render errors and failed lazy tool chunks and shows an announced
+  `Alert` with a reload button instead of a blank page. It logs to the browser console only.
+- **Target size.** Footer and breadcrumb links are `min-h-11` (they were ~20px tall).
+- **Audit results, no change needed:** the main bundle is ~97 kB gzip (React + React Router + app
+  shell and every tool's static copy, ~14 kB of source); each tool is its own 1–5 kB chunk; fonts are
+  system fonts; the web build emits no source maps (the server bundle's map is not served); no
+  horizontal overflow from 320 px to 1440 px.
+
 ### 6. Database
 
 Prisma 7 + SQLite via `@prisma/adapter-better-sqlite3`. **There are no models yet**: every MVP tool

@@ -21,6 +21,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 3     | Tool registry, routing, first 10 tools, client-side search                   | done  |
 | 4     | Product quality: related tools, category filter/discovery, content/a11y pass | done  |
 | 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots   | done  |
+| 6     | Production readiness: route focus/scroll, error boundary, target sizes       | done  |
 | 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)     | next  |
 | 9–11  | Full test pass, lint/build, UX/a11y/perf review                              |       |
 
@@ -37,7 +38,8 @@ client-side search over it (`apps/web/src/lib/searchTools.ts`). Phase 5 added th
 (see "SEO principles"): every page sets canonical/OG/Twitter/robots tags and JSON-LD client-side
 (`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. What's still
 outstanding: server-side injection of those tags into `index.html` (Phase 8) — client-set tags do not
-help crawlers/social previews that do not execute JavaScript.
+help crawlers/social previews that do not execute JavaScript. Phase 6 was an audit-driven polish pass
+(see `docs/architecture.md`, "Resilience and navigation"); it added no features or dependencies.
 
 ## Architecture
 
