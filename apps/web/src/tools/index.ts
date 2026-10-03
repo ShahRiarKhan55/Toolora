@@ -9,6 +9,13 @@ import { content as jsonFormatterContent } from './json-formatter/content';
 import { content as base64EncoderDecoderContent } from './base64-encoder-decoder/content';
 import { content as uuidGeneratorContent } from './uuid-generator/content';
 import { content as unixTimestampConverterContent } from './unix-timestamp-converter/content';
+import { content as regexTesterContent } from './regex-tester/content';
+import { content as csvJsonConverterContent } from './csv-json-converter/content';
+import { content as jsonToTypescriptContent } from './json-to-typescript/content';
+import { content as gpaPercentageConverterContent } from './gpa-percentage-converter/content';
+import { content as dateDifferenceCalculatorContent } from './date-difference-calculator/content';
+import { content as japanesePostalCodeFormatterContent } from './japanese-postal-code-formatter/content';
+import { content as japanesePhoneNumberFormatterContent } from './japanese-phone-number-formatter/content';
 import type { ToolImplementation } from './types';
 
 // The single map from a registry tool id to its lazy-loaded workspace component and its copy.
@@ -87,5 +94,59 @@ export const TOOL_IMPLEMENTATIONS: Readonly<Record<string, ToolImplementation>> 
       })),
     ),
     content: unixTimestampConverterContent,
+  },
+  'regex-tester': {
+    Component: lazy(() =>
+      import('./regex-tester/RegexTesterTool').then((m) => ({ default: m.RegexTesterTool })),
+    ),
+    content: regexTesterContent,
+  },
+  'csv-json-converter': {
+    Component: lazy(() =>
+      import('./csv-json-converter/CsvJsonConverterTool').then((m) => ({
+        default: m.CsvJsonConverterTool,
+      })),
+    ),
+    content: csvJsonConverterContent,
+  },
+  'json-to-typescript': {
+    Component: lazy(() =>
+      import('./json-to-typescript/JsonToTypescriptTool').then((m) => ({
+        default: m.JsonToTypescriptTool,
+      })),
+    ),
+    content: jsonToTypescriptContent,
+  },
+  'gpa-percentage-converter': {
+    Component: lazy(() =>
+      import('./gpa-percentage-converter/GpaPercentageConverterTool').then((m) => ({
+        default: m.GpaPercentageConverterTool,
+      })),
+    ),
+    content: gpaPercentageConverterContent,
+  },
+  'date-difference-calculator': {
+    Component: lazy(() =>
+      import('./date-difference-calculator/DateDifferenceCalculatorTool').then((m) => ({
+        default: m.DateDifferenceCalculatorTool,
+      })),
+    ),
+    content: dateDifferenceCalculatorContent,
+  },
+  'japanese-postal-code-formatter': {
+    Component: lazy(() =>
+      import('./japanese-postal-code-formatter/JapanesePostalCodeFormatterTool').then((m) => ({
+        default: m.JapanesePostalCodeFormatterTool,
+      })),
+    ),
+    content: japanesePostalCodeFormatterContent,
+  },
+  'japanese-phone-number-formatter': {
+    Component: lazy(() =>
+      import('./japanese-phone-number-formatter/JapanesePhoneNumberFormatterTool').then((m) => ({
+        default: m.JapanesePhoneNumberFormatterTool,
+      })),
+    ),
+    content: japanesePhoneNumberFormatterContent,
   },
 };

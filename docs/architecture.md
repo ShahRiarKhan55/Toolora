@@ -160,6 +160,24 @@ static hosting.
   system fonts; the web build emits no source maps (the server bundle's map is not served); no
   horizontal overflow from 320 px to 1440 px.
 
+### Tool expansion _(Phase 7)_
+
+- **No new framework.** The registry + `tools/index.ts` map scaled from 10 to 17 tools unchanged: seven
+  entries, seven folders, seven lines in the map. Home, "All tools", category pages, search, related tools,
+  breadcrumbs, JSON-LD and `sitemap.xml` picked the tools up with no per-tool wiring.
+- **Small additions only.** Seven icon ids (`regex`, `table`, `code`, `scale`, `calendar-range`,
+  `map-pin`, `phone`), a shared `Checkbox` (regex flags, CSV header option), and registry tests that
+  now also require a globally unique `order`, unique routes and unique descriptions.
+- **No dynamic execution.** Regex Tester only compiles the pattern with `new RegExp`; CSV, JSON→TS and
+  the formatters are hand-written parsers/generators over `JSON.parse` output. User text reaches the DOM
+  only as React text children (never `dangerouslySetInnerHTML`), and generated code is plain text.
+- **Honest limits are product copy.** The GPA converter states its single proportional formula and that
+  institutions differ; the postal/phone formatters say they format but never verify, and the phone
+  formatter leaves digits ungrouped for area codes it cannot determine rather than guessing.
+- **Bundle.** Each new tool is its own 2–5 kB chunk. Tool _copy_ (`content.tsx`) is still imported
+  eagerly, so the main chunk grows by a few kB per tool (~103 kB gzip at 17 tools); if that becomes a
+  concern, lazy-load `content` next to `Component` — not needed yet.
+
 ### 6. Database
 
 Prisma 7 + SQLite via `@prisma/adapter-better-sqlite3`. **There are no models yet**: every MVP tool

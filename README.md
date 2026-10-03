@@ -1,13 +1,14 @@
 # Toolora
 
 Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grouped into categories —
-**Japan** (yen converter, era converter, age calculator), **Student** (GPA, percentage/grade calculator,
-word counter) and **Developer** (JSON formatter, Base64, UUID generator, Unix timestamp converter). All
-10 tools run entirely in your browser, so your input is never sent anywhere.
+**Japan** (yen, era, age, postal-code and phone-number tools), **Student** (GPA, percentage/grade
+calculator, word counter, GPA ↔ percentage, date difference) and **Developer** (JSON formatter, Base64,
+UUID, Unix timestamp, regex tester, CSV ↔ JSON, JSON → TypeScript). All 17 tools run entirely in your
+browser, so your input is never sent anywhere.
 
-> **Status: early development (Phase 6 of 11).** The repository has the monorepo, tooling, the design
+> **Status: early development (Phase 7 of 11).** The repository has the monorepo, tooling, the design
 > system and app shell, a working API skeleton, real routing (`react-router-dom`), a tool registry, and
-> the first 10 tools — all working, tested and searchable/filterable at `/tools`, with related-tools
+> 17 tools — all working, tested and searchable/filterable at `/tools`, with related-tools
 > navigation on every tool page, and a client-side SEO foundation (canonical/Open Graph/Twitter tags,
 > JSON-LD, `sitemap.xml`, `robots.txt`). See the status table in [`CLAUDE.md`](./CLAUDE.md) and the
 > registry/routing details in [`docs/tools.md`](./docs/tools.md).

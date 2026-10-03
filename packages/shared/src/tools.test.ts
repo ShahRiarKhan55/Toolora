@@ -88,6 +88,23 @@ describe('TOOLS registry', () => {
     }
   });
 
+  // `order` also drives the "All tools" listing and related-tool tie-breaks, so a repeat anywhere
+  // (not just within a category) would make that ordering depend on array position.
+  it('gives every tool a globally unique order, so listings are deterministic', () => {
+    const orders = TOOLS.map((tool) => tool.order);
+    expect(new Set(orders).size).toBe(orders.length);
+  });
+
+  it('derives a unique route per tool', () => {
+    const routes = TOOLS.map((tool) => toolRoute(tool.slug));
+    expect(new Set(routes).size).toBe(routes.length);
+  });
+
+  it('gives every tool a unique description, so cards and meta text never repeat', () => {
+    const descriptions = TOOLS.map((tool) => tool.description);
+    expect(new Set(descriptions).size).toBe(descriptions.length);
+  });
+
   it('gives every tool a unique order within its category', () => {
     for (const category of CATEGORY_IDS) {
       const orders = TOOLS.filter((tool) => tool.category === category).map((tool) => tool.order);

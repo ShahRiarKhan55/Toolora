@@ -14,16 +14,17 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 
 ## Status
 
-| Phase | Scope                                                                        | State |
-| ----- | ---------------------------------------------------------------------------- | ----- |
-| 0–1   | Analysis, monorepo, tooling, server skeleton                                 | done  |
-| 2     | Design system + app shell                                                    | done  |
-| 3     | Tool registry, routing, first 10 tools, client-side search                   | done  |
-| 4     | Product quality: related tools, category filter/discovery, content/a11y pass | done  |
-| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots   | done  |
-| 6     | Production readiness: route focus/scroll, error boundary, target sizes       | done  |
-| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)     | next  |
-| 9–11  | Full test pass, lint/build, UX/a11y/perf review                              |       |
+| Phase | Scope                                                                                 | State |
+| ----- | ------------------------------------------------------------------------------------- | ----- |
+| 0–1   | Analysis, monorepo, tooling, server skeleton                                          | done  |
+| 2     | Design system + app shell                                                             | done  |
+| 3     | Tool registry, routing, first 10 tools, client-side search                            | done  |
+| 4     | Product quality: related tools, category filter/discovery, content/a11y pass          | done  |
+| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots            | done  |
+| 6     | Production readiness: route focus/scroll, error boundary, target sizes                | done  |
+| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone) | done  |
+| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | next  |
+| 9–11  | Full test pass, lint/build, UX/a11y/perf review                                       |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -33,7 +34,7 @@ stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, l
 accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
 phases land.
 
-The app now has real routes (`react-router-dom`), a working tool registry with all 10 MVP tools, and a
+The app now has real routes (`react-router-dom`), a working tool registry with all 17 tools (10 MVP + 7 from Phase 7), and a
 client-side search over it (`apps/web/src/lib/searchTools.ts`). Phase 5 added the SEO foundation
 (see "SEO principles"): every page sets canonical/OG/Twitter/robots tags and JSON-LD client-side
 (`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. What's still
@@ -156,7 +157,7 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 
 ## Privacy principles
 
-- Local tools (JSON, Base64, UUID, word counter, GPA, percentage, timestamp, age, era, yen) process input
+- Local tools (every tool in the registry: JSON, Base64, UUID, regex, CSV, TypeScript, dates, GPA, Japan formatters, ...) process input
   **in the browser only**. Never send tool input to the server; never put it in URLs or storage without
   the user asking. Say so in the UI where it reassures users.
 - Server logs contain method, path, status, duration and request id only — never query strings,

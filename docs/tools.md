@@ -3,6 +3,37 @@
 How the tool registry and routing work, and the exact steps to add a new tool. See `CLAUDE.md` for
 the day-to-day rules this implements, and `docs/architecture.md` for the reasoning behind it.
 
+## Current catalog (17 tools)
+
+| Category  | Tool (route `/tools/<slug>`)                                                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Japan     | `japanese-yen-converter`, `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`   |
+| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                            |
+| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript` |
+
+Phase 7 added the last seven of each row. Notes on what they do and deliberately do not do:
+
+- **Regex Tester** — native `RegExp` only (flags g/i/m/s/u), live results with positions (UTF-16 units),
+  numbered/named groups, a 1000-match cap. Empty pattern shows nothing; invalid pattern/flags show the
+  engine's message. A catastrophically backtracking pattern can still stall the tab (no worker).
+- **CSV ↔ JSON** — hand-written RFC 4180-style parser (quotes, `""`, commas/newlines in quotes, CRLF,
+  blank lines skipped, stray text after a closing quote is an error). CSV→JSON keeps every value a
+  string; JSON→CSV takes an array of objects (union of keys) or of arrays, nested values as JSON text.
+  Comma-delimited only.
+- **JSON → TypeScript** — infers a shape from one sample: nested objects become named interfaces
+  (identical shapes reused, clashes numbered), array items merge (missing keys become optional, differing
+  types a union, `null` last), `unknown[]` for empty arrays, all numbers `number`.
+- **GPA ↔ Percentage** — one documented proportion (`GPA ÷ scale max × 100`, 4/5/10 scales, 2 decimals).
+  Always shows a warning that institutions use their own tables; not presented as authoritative.
+- **Date Difference** — strict `YYYY-MM-DD` via `lib/isoDate` (UTC midnight, no locale/DST); end date not
+  counted; reversed dates are swapped and flagged; the y/m/d breakdown uses the same borrow convention
+  as the age calculator.
+- **Postal code** — NFKC-normalizes (full-width digits, hyphen variants, leading 〒), requires exactly
+  7 digits with an optional separator after the 3rd, outputs `XXX-XXXX`. Format only; no existence check.
+- **Phone number** — NFKC + separator stripping, `+81`/`0081` → domestic. Groups mobile (090/080/070),
+  050, toll-free (0120/0800), 0570, 03/06 and five metro codes (045/052/075/078/092); anything else keeps
+  its digits ungrouped with a visible notice. Never verifies a number.
+
 ## Routes
 
 ```
@@ -72,7 +103,9 @@ downloads when its page is visited. `content` is small and imported eagerly. `pa
 looks up a tool's implementation and renders it inside `ToolPageLayout`, wrapped in `<Suspense>`.
 
 `apps/web/src/tools/registry.test.ts` fails if a registry entry has no implementation, or an
-implementation exists with no registry entry.
+implementation exists with no registry entry. `packages/shared/src/tools.test.ts` enforces unique ids,
+slugs, routes, names, descriptions, SEO titles/descriptions and a globally unique `order` (so listing
+order never depends on array position), plus valid categories and icons.
 
 ## Adding a tool
 

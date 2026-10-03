@@ -261,3 +261,65 @@ export function ZapIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function RegexIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M17 3v10M12.5 5.5l9 5M21.5 5.5l-9 5" />
+      <circle cx="6" cy="18" r="2" />
+    </Svg>
+  );
+}
+
+export function TableIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 10h18M9 4v16" />
+    </Svg>
+  );
+}
+
+export function FileCodeIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5M10 13l-2 2 2 2M14 13l2 2-2 2" />
+    </Svg>
+  );
+}
+
+export function ScaleIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3v18M6 21h12M5 7h14" />
+      <path d="m5 7-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z" />
+    </Svg>
+  );
+}
+
+export function CalendarRangeIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M16 3v4M8 3v4M3 11h18M8 15h8" />
+    </Svg>
+  );
+}
+
+export function MapPinIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </Svg>
+  );
+}
+
+export function PhoneIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z" />
+    </Svg>
+  );
+}

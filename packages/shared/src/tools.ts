@@ -14,6 +14,13 @@ export const TOOL_ICON_IDS = [
   'binary',
   'key',
   'clock',
+  'regex',
+  'table',
+  'code',
+  'scale',
+  'calendar-range',
+  'map-pin',
+  'phone',
 ] as const;
 
 export type ToolIconId = (typeof TOOL_ICON_IDS)[number];
@@ -198,6 +205,107 @@ export const TOOLS: readonly ToolMeta[] = [
       'Convert Unix epoch timestamps (seconds or milliseconds) to local and UTC date/time, and back, entirely in your browser.',
     localOnly: true,
     order: 10,
+  },
+  {
+    id: 'regex-tester',
+    slug: 'regex-tester',
+    name: 'Regex Tester',
+    description: 'Test a regular expression against text and see every match, group and position.',
+    category: 'developer',
+    icon: 'regex',
+    keywords: ['regex', 'regular expression', 'regexp', 'pattern', 'match', 'test', 'javascript'],
+    seoTitle: 'Regex Tester — Toolora',
+    seoDescription:
+      'Test JavaScript regular expressions with flags, see every match with its position and capture groups, and get clear errors for invalid patterns.',
+    localOnly: true,
+    order: 11,
+  },
+  {
+    id: 'csv-json-converter',
+    slug: 'csv-json-converter',
+    name: 'CSV ↔ JSON Converter',
+    description: 'Convert CSV to JSON or JSON to CSV, with quoted fields and headers handled.',
+    category: 'developer',
+    icon: 'table',
+    keywords: ['csv', 'json', 'convert', 'spreadsheet', 'table', 'comma separated', 'parser'],
+    seoTitle: 'CSV to JSON & JSON to CSV Converter — Toolora',
+    seoDescription:
+      'Convert CSV to JSON and JSON to CSV in your browser. Handles quoted fields, commas, escaped quotes and newlines inside fields.',
+    localOnly: true,
+    order: 12,
+  },
+  {
+    id: 'json-to-typescript',
+    slug: 'json-to-typescript',
+    name: 'JSON to TypeScript Converter',
+    description:
+      'Generate TypeScript interfaces from a JSON sample, including nested objects and arrays.',
+    category: 'developer',
+    icon: 'code',
+    keywords: ['json', 'typescript', 'interface', 'type', 'generate', 'types', 'ts'],
+    seoTitle: 'JSON to TypeScript Converter — Toolora',
+    seoDescription:
+      'Generate TypeScript interfaces from a JSON sample: nested objects, arrays and null values. Nothing is executed or uploaded.',
+    localOnly: true,
+    order: 13,
+  },
+  {
+    id: 'gpa-percentage-converter',
+    slug: 'gpa-percentage-converter',
+    name: 'GPA ↔ Percentage Converter',
+    description:
+      'Estimate a percentage from a GPA, or a GPA from a percentage, with a stated formula.',
+    category: 'student',
+    icon: 'scale',
+    keywords: ['gpa', 'percentage', 'convert', 'grade', '4.0 scale', '10 point', '5 point'],
+    seoTitle: 'GPA to Percentage Converter — Toolora',
+    seoDescription:
+      'Estimate percentage from GPA and GPA from percentage on a 4, 5 or 10-point scale with a simple linear formula. Institutions differ, so treat it as an estimate.',
+    localOnly: true,
+    order: 14,
+  },
+  {
+    id: 'date-difference-calculator',
+    slug: 'date-difference-calculator',
+    name: 'Date Difference Calculator',
+    description: 'Find the days, weeks and years/months/days between two dates.',
+    category: 'student',
+    icon: 'calendar-range',
+    keywords: ['date difference', 'days between', 'date calculator', 'duration', 'weeks', 'months'],
+    seoTitle: 'Date Difference Calculator — Toolora',
+    seoDescription:
+      'Calculate the days, weeks, months and years between two dates. Leap years are handled, and exact calendar dates are used, not time zones.',
+    localOnly: true,
+    order: 15,
+  },
+  {
+    id: 'japanese-postal-code-formatter',
+    slug: 'japanese-postal-code-formatter',
+    name: 'Japanese Postal Code Formatter',
+    description: 'Normalize a Japanese postal code to the XXX-XXXX format (formatting only).',
+    category: 'japan',
+    icon: 'map-pin',
+    keywords: ['postal code', 'zip code', 'yubin', 'yuubin bango', '郵便番号', 'format', 'address'],
+    seoTitle: 'Japanese Postal Code Formatter — Toolora',
+    seoDescription:
+      'Format a Japanese postal code as XXX-XXXX from 7 digits, with or without a hyphen. Checks the format only; it does not look up addresses.',
+    localOnly: true,
+    order: 16,
+  },
+  {
+    id: 'japanese-phone-number-formatter',
+    slug: 'japanese-phone-number-formatter',
+    name: 'Japanese Phone Number Formatter',
+    description:
+      'Tidy Japanese phone numbers into common domestic and +81 formats (formatting only).',
+    category: 'japan',
+    icon: 'phone',
+    keywords: ['phone number', 'telephone', 'denwa', '電話番号', 'mobile', '+81', 'format'],
+    seoTitle: 'Japanese Phone Number Formatter — Toolora',
+    seoDescription:
+      'Format Japanese mobile, toll-free and common landline numbers with hyphens, and convert +81 numbers. Formatting only; numbers are not verified.',
+    localOnly: true,
+    order: 17,
   },
 ];
 
