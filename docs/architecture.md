@@ -211,6 +211,41 @@ Express (TLS and compression belong to the proxy/platform; adding `compression` 
 without one). Dotfiles are ignored by `express.static`; paths ending in an extension never fall back to HTML. Tests:
 `apps/server/tests/production.test.ts`.
 
+### 6b. Accounts and entitlements _(Phase 11 — boundary only, nothing enforced)_
+
+**Today.** Every tool is public and runs in the browser. Accounts are not required because no tool needs
+persistence or server capability; there is no login, no user table, no payment code and no premium UI.
+Payments, subscriptions, checkout and webhooks are **not implemented**.
+
+**Database decision: keep SQLite/Prisma, add no models yet (option A, deferred).** The repo has no models,
+no `prisma/migrations/` and a git-ignored dev DB, so a `User`/`Entitlement` table today would have no writer
+and no reader. The additive schema is straightforward when the first account feature lands: `User` (id,
+created-at), `Entitlement` (userId, `level`, `expiresAt`, optional provider-neutral `externalCustomerId` /
+`externalSubscriptionId`), created with the first migration. Never store card data. Usage limits (if ever
+needed) would be a counter table keyed by user + capability; not designed further until required.
+
+**Boundaries that exist now:**
+
+- _Declaration_ — `ToolMeta.access?: AccessLevel` (`packages/shared/src/access.ts`; `'public'` | `'premium'`,
+  omitted = public). The registry stays the source of truth; read it with `requiredAccess(tool)`. Nothing
+  enforces it and every tool is public (tested).
+- _Decision_ — `apps/server/src/access.ts`: `Subject` (anonymous | user + `Entitlement[]`), `accessLevelOf`
+  and `canAccess(subject, required, now)`: pure, deterministic, expired entitlements ignored. It lives in the
+  server so the web bundle cannot import it.
+- _Identity_ — `resolveSubject(req)` is the single seam where authentication will plug in. It returns
+  anonymous and ignores every header/cookie/query/body value, so a client claim of "premium" can never count.
+
+**Future payment flow (not built):** browser → Toolora server (starts checkout) → payment provider → signed
+webhook → server verifies the signature → server writes the `Entitlement` → later requests resolve the subject
+from the server-side session and read that row. The browser is never told to, nor trusted to, say a payment
+succeeded. Payment processing is deferred because it needs an owner decision on provider, pricing, legal/tax
+and a real database strategy, and no premium capability exists to sell.
+
+**Rules:** entitlement state is never trusted from the client; premium access to any server capability is
+authorised server-side via `canAccess`; no secret goes in a `VITE_*` variable; webhooks must be signature-
+verified before they change state; auth failures use one generic response so account existence never leaks;
+anonymous use stays supported for every public tool.
+
 ### 7. Errors and logging
 
 - `config.ts` validates the environment with zod at startup and fails fast with a readable message.

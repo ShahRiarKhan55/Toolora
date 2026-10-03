@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { meetsAccessLevel, requiredAccess } from './access';
 import { CATEGORY_IDS } from './categories';
 import {
   ALL_TOOLS_ROUTE,
@@ -28,6 +29,17 @@ describe('TOOLS registry', () => {
     const populated = getPopulatedCategories().map((category) => category.id);
     expect(populated).not.toContain('ai');
     expect(populated).toEqual(CATEGORY_IDS.filter((id) => getToolsByCategory(id).length > 0));
+  });
+
+  it('keeps every current tool public and free of any account requirement', () => {
+    for (const tool of TOOLS) expect(requiredAccess(tool), tool.id).toBe('public');
+  });
+
+  it('orders access levels public < premium', () => {
+    expect(meetsAccessLevel('public', 'public')).toBe(true);
+    expect(meetsAccessLevel('public', 'premium')).toBe(false);
+    expect(meetsAccessLevel('premium', 'public')).toBe(true);
+    expect(requiredAccess({ access: 'premium' })).toBe('premium');
   });
 
   it('is not empty', () => {

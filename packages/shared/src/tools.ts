@@ -1,3 +1,4 @@
+import type { AccessLevel } from './access';
 import { CATEGORIES } from './categories';
 import type { Category, CategoryId } from './categories';
 
@@ -50,6 +51,11 @@ export interface ToolMeta {
    * is not the tool itself, and is not repeated.
    */
   related?: readonly string[];
+  /**
+   * Access level the tool needs; omitted = `'public'`. Declaration only: nothing enforces it yet and
+   * every current tool is public. Read it through `requiredAccess`, never directly.
+   */
+  access?: AccessLevel;
 }
 
 // Every tool here is fully implemented and working (see CLAUDE.md: no disabled "coming soon" entries).

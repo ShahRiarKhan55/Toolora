@@ -26,7 +26,8 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | done  |
 | 9     | Discovery: curated `related` links, populated-only category links, concise home       | done  |
 | 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests   | done  |
-| 11    | Full test pass, lint/build, UX/a11y/perf review                                       |       |
+| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)  | done  |
+| 12    | Full test pass, lint/build, UX/a11y/perf review                                       |       |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -200,6 +201,15 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 cross-origin client). Caching: `/assets/*` immutable 1 y, HTML `no-cache`, `/api/*` `no-store`. Responses are not compressed by
 Express - the proxy/platform must do it. `/api/health` pings SQLite (no models exist, so the DB holds no data). Payments/accounts
 will need a real DB strategy and are deferred. Regression tests: `apps/server/tests/production.test.ts`.
+
+## Accounts and entitlements (Phase 11 — groundwork only)
+
+No accounts, payments, checkout or webhooks exist; all tools stay public. `ToolMeta.access` (default
+`'public'`) declares a future requirement; `apps/server/src/access.ts` decides (`canAccess`), and
+`resolveSubject` is the one place authentication will plug in (currently always anonymous). Rules: never trust
+client-sent entitlement state; premium checks for server capabilities happen server-side; never put secrets in
+`VITE_*`; never store card data; payment webhooks must be signature-verified; auth errors are generic. No
+Prisma models yet — add them with the first real account feature (see `docs/architecture.md`, 6b).
 
 ## Accessibility and UI rules
 
