@@ -40,6 +40,27 @@ describe('GET /api/health', () => {
   });
 });
 
+describe('GET /api/health with accounts closed', () => {
+  it('does not touch the database, so a stateless host (Vercel) stays healthy', async () => {
+    const ping = vi.fn(() => Promise.reject(new Error('no writable database')));
+    const statelessApp = createApp({
+      logger: silentLogger,
+      db: { ...db, ping },
+      accountsEnabled: false,
+    });
+
+    const res = await request(statelessApp).get('/api/health');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      status: 'ok',
+      database: 'not-used',
+      uptimeSeconds: expect.any(Number) as number,
+    });
+    expect(ping).not.toHaveBeenCalled();
+  });
+});
+
 describe('request handling', () => {
   it('returns a JSON 404 for unknown API routes', async () => {
     const res = await request(app).get('/api/does-not-exist');

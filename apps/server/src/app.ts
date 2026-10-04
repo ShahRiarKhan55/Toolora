@@ -53,7 +53,7 @@ export function createApp({
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
-  app.use('/api', healthRouter({ db, logger }));
+  app.use('/api', healthRouter({ db, logger, checkDatabase: accountsEnabled }));
   if (accountsEnabled) {
     app.use('/api/auth', authRouter({ auth: createAuth({ prisma: db.prisma, secureCookies }) }));
   }

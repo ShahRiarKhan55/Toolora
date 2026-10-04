@@ -7,7 +7,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['**/dist/**', '**/coverage/**', 'apps/server/src/generated/**']),
+  globalIgnores(['**/dist/**', 'public/**', '**/coverage/**', 'apps/server/src/generated/**']),
   js.configs.recommended,
 
   // TypeScript everywhere: type-aware rules (catches floating promises, unsafe any, ...).

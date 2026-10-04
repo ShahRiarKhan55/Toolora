@@ -10,8 +10,9 @@ const external = Object.keys(pkg.dependencies).filter((name) => !name.startsWith
 rmSync(new URL('./dist', import.meta.url), { recursive: true, force: true });
 
 await build({
-  entryPoints: ['src/index.ts'],
-  outfile: 'dist/index.js',
+  // index.js is the long-running server (npm start); vercel.js is the Vercel function entry.
+  entryPoints: ['src/index.ts', 'src/vercel.ts'],
+  outdir: 'dist',
   bundle: true,
   platform: 'node',
   format: 'esm',

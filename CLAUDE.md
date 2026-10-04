@@ -31,6 +31,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)         | done  |
 | 13    | Full test pass, lint/build, UX/a11y/perf review                                       | done  |
 | 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)  | done  |
+| 17    | Vercel deployment preparation (stateless Express function; not yet deployed)          | done  |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -203,7 +204,7 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 (CSP `script-src 'self'`, HSTS, ...) plus `Permissions-Policy`; **no CORS** (same-origin app - do not add it without a concrete
 cross-origin client). Caching: `/assets/*` immutable 1 y, HTML `no-cache`, `/api/*` `no-store`. Responses are not compressed by
 Express - the proxy/platform must do it. `/api/health` pings SQLite (the DB holds the accounts: run `npm run db:deploy` first).
-Payments will need a real DB strategy and are deferred. Regression tests: `apps/server/tests/production.test.ts`.
+Payments will need a real DB strategy and are deferred. Vercel (Phase 17, `vercel.json`, `server.mjs`, `docs/deployment.md`): stateless while accounts are closed — `/api/health` skips the DB ping then; accounts must not be enabled on Vercel without a persistent database. Regression tests: `apps/server/tests/production.test.ts`.
 
 ## Accounts and entitlements (Phase 11 boundary, Phase 12 authentication)
 
