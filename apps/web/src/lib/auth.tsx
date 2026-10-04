@@ -26,11 +26,19 @@ async function call(path: string, body?: unknown): Promise<AuthUser | null> {
   return data?.user ?? null;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthState['status']>('loading');
+export function AuthProvider({
+  children,
+  enabled = true,
+}: {
+  children: ReactNode;
+  enabled?: boolean;
+}) {
+  const [status, setStatus] = useState<AuthState['status']>(enabled ? 'loading' : 'ready');
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
+    // Closed accounts: no session check, so anonymous visitors make no /api/auth request at all.
+    if (!enabled) return;
     let active = true;
     void call('session')
       .catch(() => null)
@@ -42,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [enabled]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     setUser(await call('login', { email, password }));
@@ -56,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, user, signIn, register, signOut }),
-    [status, user, signIn, register, signOut],
+    () => ({ enabled, status, user, signIn, register, signOut }),
+    [enabled, status, user, signIn, register, signOut],
   );
   return <AuthContext value={value}>{children}</AuthContext>;
 }

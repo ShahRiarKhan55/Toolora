@@ -1,4 +1,5 @@
 import { StrictMode } from 'react';
+import { ACCOUNTS_ENABLED } from '@toolora/shared';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
@@ -11,7 +12,7 @@ if (!container) throw new Error('Root element #root not found in index.html');
 createRoot(container).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
+      <AuthProvider enabled={ACCOUNTS_ENABLED}>
         <App />
       </AuthProvider>
     </BrowserRouter>

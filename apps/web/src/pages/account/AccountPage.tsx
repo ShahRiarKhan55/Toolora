@@ -87,7 +87,7 @@ function AccountForm({ headingRef }: { headingRef: Ref<HTMLHeadingElement> }) {
 
 export function AccountPage() {
   useDocumentMeta(ACCOUNT_META);
-  const { status, user, signOut } = useAuth();
+  const { enabled, status, user, signOut } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const focusRef = useRef<HTMLElement>(null);
   const settled = useRef<{ user: typeof user } | null>(null);
@@ -100,6 +100,17 @@ export function AccountPage() {
     if (settled.current && settled.current.user !== user) focusRef.current?.focus();
     settled.current = { user };
   }, [status, user]);
+
+  if (!enabled) {
+    return (
+      <Container className="py-12">
+        <PageHeader
+          title="Account"
+          description="Accounts are not open yet. Every tool works without one."
+        />
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-12">

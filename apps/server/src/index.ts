@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { SITE_NAME } from '@toolora/shared';
+import { ACCOUNTS_ENABLED, SITE_NAME } from '@toolora/shared';
 import { createApp } from './app';
 import { loadConfig } from './config';
 import { createDatabase } from './db';
@@ -18,6 +18,7 @@ function main(): void {
   const app = createApp({
     logger,
     db,
+    accountsEnabled: ACCOUNTS_ENABLED,
     secureCookies: config.nodeEnv === 'production',
     publicSiteOrigin: config.publicSiteOrigin,
     webDistDir: existsSync(join(webDistDir, 'index.html')) ? webDistDir : undefined,

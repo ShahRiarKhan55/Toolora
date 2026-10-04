@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../../lib/auth';
 import { describe, expect, it } from 'vitest';
 import { Header } from './Header';
 
@@ -43,6 +44,17 @@ describe('Header', () => {
     for (const [label, href] of NAV) {
       expect(nav.getByRole('link', { name: label })).toHaveAttribute('href', href);
     }
+  });
+
+  it('has no sign-in or account link while accounts are closed', () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider enabled={false}>
+          <Header />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('link', { name: /sign in|account/i, hidden: true })).toBeNull();
   });
 
   it('does not list AI in the navigation while it has no tools', () => {

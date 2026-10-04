@@ -22,6 +22,9 @@ export interface AppDeps {
   /** The built web app (apps/web/dist). Omit when it has not been built (dev, API-only tests): the
    *  server then serves only the API and SEO files. */
   webDistDir?: string;
+  /** Mount `/api/auth`. The production entry point passes ACCOUNTS_ENABLED (false at launch); when
+   *  off, those paths are plain JSON 404s. Defaults to true so the auth tests exercise the API. */
+  accountsEnabled?: boolean;
 }
 
 /** Builds the Express app without listening, so tests can drive it directly with supertest. */
@@ -31,6 +34,7 @@ export function createApp({
   secureCookies = false,
   publicSiteOrigin,
   webDistDir,
+  accountsEnabled = true,
 }: AppDeps): Express {
   const app = express();
 
@@ -50,7 +54,9 @@ export function createApp({
     next();
   });
   app.use('/api', healthRouter({ db, logger }));
-  app.use('/api/auth', authRouter({ auth: createAuth({ prisma: db.prisma, secureCookies }) }));
+  if (accountsEnabled) {
+    app.use('/api/auth', authRouter({ auth: createAuth({ prisma: db.prisma, secureCookies }) }));
+  }
   if (webDistDir !== undefined) app.use(spaRouter({ webDistDir, publicSiteOrigin }));
 
   app.use(routeNotFound);

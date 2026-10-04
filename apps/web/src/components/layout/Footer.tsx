@@ -1,4 +1,4 @@
-import { SITE_NAME, SITE_TAGLINE } from '@toolora/shared';
+import { CONTACT_ROUTE, PRIVACY_ROUTE, SITE_NAME, SITE_TAGLINE } from '@toolora/shared';
 import { Link } from 'react-router-dom';
 import { ALL_TOOLS_HREF, CATEGORY_NAV } from '../../config/navigation';
 import { Logo } from '../brand/Logo';
@@ -42,6 +42,16 @@ export function Footer() {
             <li>
               <Link to={ALL_TOOLS_HREF} className={linkStyles}>
                 All Tools
+              </Link>
+            </li>
+            <li>
+              <Link to={PRIVACY_ROUTE} className={linkStyles}>
+                Privacy
+              </Link>
+            </li>
+            <li>
+              <Link to={CONTACT_ROUTE} className={linkStyles}>
+                Contact
               </Link>
             </li>
           </ul>

@@ -4,7 +4,7 @@
 
 import type { CategoryId } from './categories';
 import { CATEGORIES, CATEGORY_IDS } from './categories';
-import { ACCOUNT_ROUTE, HOME_ROUTE, SITE_NAME } from './site';
+import { ACCOUNT_ROUTE, CONTACT_ROUTE, HOME_ROUTE, PRIVACY_ROUTE, SITE_NAME } from './site';
 import type { StructuredData } from './structuredData';
 import { buildToolStructuredData, buildWebSiteStructuredData } from './structuredData';
 import type { ToolMeta } from './tools';
@@ -105,13 +105,25 @@ export const NOT_FOUND_META: PageMeta = {
 // Indexable pages never depend on it, so a sign-in form stays out of search results.
 export const ACCOUNT_META: PageMeta = {
   title: `Account — ${SITE_NAME}`,
-  description: `Sign in to or create a ${SITE_NAME} account. No account is needed to use the tools.`,
+  description: `${SITE_NAME} accounts are not open to the public yet. No account is needed to use the tools.`,
   robots: 'noindex,follow',
+};
+
+export const PRIVACY_META: PageMeta = {
+  title: `Privacy — ${SITE_NAME}`,
+  description: `What ${SITE_NAME} does and does not do with your data: tool input stays in your browser, and the server keeps only basic request logs.`,
+  path: PRIVACY_ROUTE,
+};
+
+export const CONTACT_META: PageMeta = {
+  title: `Contact — ${SITE_NAME}`,
+  description: `How to contact the person who runs ${SITE_NAME}, including for privacy questions.`,
+  path: CONTACT_ROUTE,
 };
 
 /**
  * Resolves a request pathname (+ query string) to its metadata, mirroring the web router
- * (`/`, `/account`, `/tools`, `/tools/<category|slug>`, everything else 404). `status` is the HTTP status the
+ * (`/`, `/account`, `/privacy`, `/contact`, `/tools`, `/tools/<category|slug>`, everything else 404). `status` is the HTTP status the
  * server should answer with.
  */
 export function resolveRouteMeta(
@@ -123,6 +135,8 @@ export function resolveRouteMeta(
 
   if (path === HOME_ROUTE) return { meta: homeMeta(origin), status: 200 };
   if (path === ACCOUNT_ROUTE) return { meta: ACCOUNT_META, status: 200 };
+  if (path === PRIVACY_ROUTE) return { meta: PRIVACY_META, status: 200 };
+  if (path === CONTACT_ROUTE) return { meta: CONTACT_META, status: 200 };
 
   if (path === ALL_TOOLS_ROUTE) {
     const params = new URLSearchParams(search);

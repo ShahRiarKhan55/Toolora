@@ -6,6 +6,8 @@ export interface AuthUser {
 }
 
 export interface AuthState {
+  /** False while accounts are closed to the public (see ACCOUNTS_ENABLED): no sign-in entry points. */
+  enabled: boolean;
   /** `loading` until the first session check answers; the page never guesses signed-in or out. */
   status: 'loading' | 'ready';
   user: AuthUser | null;
@@ -21,6 +23,7 @@ const unavailable = () => Promise.reject(new AuthError('Accounts are not availab
 
 // Without a provider (isolated component tests) everyone is simply signed out.
 export const AuthContext = createContext<AuthState>({
+  enabled: true,
   status: 'ready',
   user: null,
   signIn: unavailable,

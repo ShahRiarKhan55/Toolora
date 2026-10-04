@@ -26,6 +26,21 @@ afterAll(async () => {
   await db.close();
 });
 
+describe('accounts closed (launch configuration)', () => {
+  it('answers /api/auth/* with a JSON 404 and never registers anyone', async () => {
+    const closed = createApp({ logger, db, accountsEnabled: false });
+    const res = await request(closed)
+      .post('/api/auth/register')
+      .set('Content-Type', 'application/json')
+      .send(JSON.stringify({ email: 'closed@example.test', password: PASSWORD }));
+    expect(res.status).toBe(404);
+    expect(res.headers['content-type']).toMatch(/json/);
+    expect(res.headers['set-cookie']).toBeUndefined();
+    expect((await request(closed).get('/api/auth/session')).status).toBe(404);
+    expect((await request(closed).get('/api/health')).status).toBe(200);
+  });
+});
+
 let counter = 0;
 const newEmail = () => `user${++counter}@example.test`;
 

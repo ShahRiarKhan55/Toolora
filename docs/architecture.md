@@ -214,6 +214,9 @@ without one). Dotfiles are ignored by `express.static`; paths ending in an exten
 
 ### 6b. Accounts and entitlements _(Phase 11 boundary, Phase 12 real authentication)_
 
+> **Closed at launch (Phase 15).** `ACCOUNTS_ENABLED` is `false`: the API below is not mounted (404), the UI entry
+> points are hidden. See `docs/deployment.md`. The rest of this section describes the behaviour when it is on.
+
 **Today.** Every tool is public and runs in the browser; no tool needs an account. Phase 12 added a small
 real account system (register, sign in, sign out, a server-verified session) and connected it to the
 Phase 11 access model. **Payments, subscriptions, checkout, pricing, webhooks, email verification, password

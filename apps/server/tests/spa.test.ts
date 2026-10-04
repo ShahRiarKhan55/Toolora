@@ -102,6 +102,17 @@ describe('server-rendered SEO head', () => {
     expect((await request(app()).get('/sitemap.xml')).text).not.toContain('/account');
   });
 
+  it('privacy and contact pages: indexable, canonical, and in the sitemap', async () => {
+    const sitemap = (await request(app()).get('/sitemap.xml')).text;
+    for (const path of ['/privacy', '/contact']) {
+      const res = await request(app()).get(path);
+      expect(res.status).toBe(200);
+      expect(res.text).toContain('<meta name="robots" content="index,follow" />');
+      expect(res.text).toContain(`<link rel="canonical" href="https://toolora.example${path}" />`);
+      expect(sitemap).toContain(`https://toolora.example${path}</loc>`);
+    }
+  });
+
   it('account page: a private page has no canonical or og:url of its own', async () => {
     const { text } = await request(app()).get('/account');
     expect(text).not.toContain('rel="canonical"');

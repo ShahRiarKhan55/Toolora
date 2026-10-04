@@ -39,6 +39,8 @@ describe('Footer', () => {
     const site = within(screen.getByRole('navigation', { name: 'Footer site' }));
     expect(site.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
     expect(site.getByRole('link', { name: 'All Tools' })).toHaveAttribute('href', '/tools');
+    expect(site.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
+    expect(site.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');
   });
 
   it('states the privacy approach without legal or company claims', () => {

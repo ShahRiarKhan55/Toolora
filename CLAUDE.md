@@ -30,6 +30,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)  | done  |
 | 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)         | done  |
 | 13    | Full test pass, lint/build, UX/a11y/perf review                                       | done  |
+| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)  | done  |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -205,6 +206,11 @@ Express - the proxy/platform must do it. `/api/health` pings SQLite (the DB hold
 Payments will need a real DB strategy and are deferred. Regression tests: `apps/server/tests/production.test.ts`.
 
 ## Accounts and entitlements (Phase 11 boundary, Phase 12 authentication)
+
+**Launch state (Phase 15): accounts are closed.** `ACCOUNTS_ENABLED = false` in `packages/shared/src/site.ts` hides the
+header link, turns `/account` into a noindex notice and stops the server mounting `/api/auth`. Code, models and tests
+stay. Owner-supplied deploy values and the pre-reopen checklist: `docs/deployment.md`. The text below describes the
+system as it behaves when the flag is on.
 
 Real accounts exist (`User`, `Session`; email + scrypt password; HttpOnly cookie session under `/api/auth`, UI at
 `/account`) - see `docs/architecture.md`, 6b. Payments, subscriptions, checkout, webhooks, email verification,

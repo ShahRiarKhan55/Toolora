@@ -2,7 +2,7 @@
 // list so there is no second, hand-maintained URL list to drift out of sync (see CLAUDE.md, "Rules
 // against fake functionality" and docs/tools.md).
 
-import { HOME_ROUTE } from './site';
+import { CONTACT_ROUTE, HOME_ROUTE, PRIVACY_ROUTE } from './site';
 import { ALL_TOOLS_ROUTE, categoryRoute, getPopulatedCategories, TOOLS, toolRoute } from './tools';
 import { absoluteUrl } from './url';
 
@@ -11,7 +11,7 @@ export interface SitemapRoute {
 }
 
 /**
- * Every route that should be indexed: home, "All Tools", every category page that actually has a
+ * Every route that should be indexed: home, "All Tools", the privacy and contact pages, every category page that actually has a
  * tool in it, and every tool page. A category with no tools yet (currently `ai`) is deliberately left
  * out — it has no indexable content, just a "coming soon" empty state (see `docs/tools.md`).
  */
@@ -21,7 +21,14 @@ export function getIndexableRoutes(): readonly SitemapRoute[] {
   }));
   const toolRoutes = TOOLS.map((tool) => ({ path: toolRoute(tool.slug) }));
 
-  return [{ path: HOME_ROUTE }, { path: ALL_TOOLS_ROUTE }, ...categoryRoutes, ...toolRoutes];
+  return [
+    { path: HOME_ROUTE },
+    { path: ALL_TOOLS_ROUTE },
+    ...categoryRoutes,
+    ...toolRoutes,
+    { path: PRIVACY_ROUTE },
+    { path: CONTACT_ROUTE },
+  ];
 }
 
 function escapeXml(value: string): string {

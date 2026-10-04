@@ -48,6 +48,24 @@ function renderPage() {
 
 afterEach(() => vi.unstubAllGlobals());
 
+describe('AccountPage while accounts are closed', () => {
+  it('shows a notice, no form, and makes no API request', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    render(
+      <MemoryRouter>
+        <AuthProvider enabled={false}>
+          <AccountPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { level: 1, name: 'Account' })).toBeInTheDocument();
+    expect(screen.getByText(/not open yet/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /create|sign in/i })).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('AccountPage', () => {
   it('shows the sign-in form to a signed-out visitor, with one h1 and the header link "Sign in"', async () => {
     fakeApi();
