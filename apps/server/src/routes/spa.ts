@@ -23,6 +23,8 @@ export function spaRouter({
   }
 
   const router = Router();
+  // The template itself carries no route tags; only the injected responses below may be served as HTML.
+  router.get('/index.html', (_req, _res, next) => next('router'));
   // Vite fingerprints everything in /assets, so those files never change under the same name.
   router.use(
     '/assets',

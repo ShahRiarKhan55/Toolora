@@ -26,21 +26,20 @@ function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: 
           </Link>
         </li>
       ))}
-      {status === 'ready' && (
-        <li>
-          <Link
-            to={ACCOUNT_ROUTE}
-            onClick={onNavigate}
-            className={
-              layout === 'bar'
-                ? 'rounded-control px-3 py-2 text-sm font-semibold hover:bg-surface-muted'
-                : 'flex min-h-11 items-center rounded-control px-3 text-base font-semibold hover:bg-surface-muted'
-            }
-          >
-            {user ? 'Account' : 'Sign in'}
-          </Link>
-        </li>
-      )}
+      {/* Always laid out so the nav does not shift when the session check answers; hidden until then. */}
+      <li className={status === 'ready' ? undefined : 'invisible'}>
+        <Link
+          to={ACCOUNT_ROUTE}
+          onClick={onNavigate}
+          className={
+            layout === 'bar'
+              ? 'rounded-control px-3 py-2 text-sm font-semibold hover:bg-surface-muted'
+              : 'flex min-h-11 items-center rounded-control px-3 text-base font-semibold hover:bg-surface-muted'
+          }
+        >
+          {user ? 'Account' : 'Sign in'}
+        </Link>
+      </li>
     </ul>
   );
 }

@@ -1,6 +1,6 @@
 import { ACCOUNT_META } from '@toolora/shared';
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent, Ref } from 'react';
 import { Container } from '../../components/layout/Container';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Alert } from '../../components/ui/Alert';
@@ -12,7 +12,7 @@ import { useDocumentMeta } from '../../lib/useDocumentMeta';
 
 type Mode = 'signin' | 'register';
 
-function AccountForm() {
+function AccountForm({ headingRef }: { headingRef: Ref<HTMLHeadingElement> }) {
   const { signIn, register } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
@@ -35,7 +35,9 @@ function AccountForm() {
 
   return (
     <Card className="mt-8 max-w-md">
-      <h2 className="text-xl font-semibold">{registering ? 'Create an account' : 'Sign in'}</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold focus:outline-none">
+        {registering ? 'Create an account' : 'Sign in'}
+      </h2>
       <form onSubmit={(event) => void onSubmit(event)} className="mt-4 space-y-4">
         <Input
           label="Email"
@@ -60,7 +62,13 @@ function AccountForm() {
         />
         {error && <Alert tone="error">{error}</Alert>}
         <Button type="submit" disabled={busy} className="w-full">
-          {registering ? 'Create account' : 'Sign in'}
+          {busy
+            ? registering
+              ? 'Creating account…'
+              : 'Signing in…'
+            : registering
+              ? 'Create account'
+              : 'Sign in'}
         </Button>
       </form>
       <Button
@@ -81,6 +89,17 @@ export function AccountPage() {
   useDocumentMeta(ACCOUNT_META);
   const { status, user, signOut } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const focusRef = useRef<HTMLElement>(null);
+  const settled = useRef<{ user: typeof user } | null>(null);
+
+  // Signing in or out swaps the form for the signed-in card (or back), unmounting the focused
+  // control. Move focus to the new state's first element so keyboard and screen-reader users land
+  // on it; the first session check on load must not steal focus.
+  useEffect(() => {
+    if (status !== 'ready') return;
+    if (settled.current && settled.current.user !== user) focusRef.current?.focus();
+    settled.current = { user };
+  }, [status, user]);
 
   return (
     <Container className="py-12">
@@ -93,10 +112,16 @@ export function AccountPage() {
           Checking your session…
         </p>
       )}
-      {status === 'ready' && user === null && <AccountForm />}
+      {status === 'ready' && user === null && (
+        <AccountForm headingRef={focusRef as Ref<HTMLHeadingElement>} />
+      )}
       {status === 'ready' && user !== null && (
         <Card className="mt-8 max-w-md">
-          <p>
+          <p
+            ref={focusRef as Ref<HTMLParagraphElement>}
+            tabIndex={-1}
+            className="focus:outline-none"
+          >
             Signed in as <strong>{user.email}</strong>.
           </p>
           {error && (

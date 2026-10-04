@@ -101,11 +101,11 @@ export const NOT_FOUND_META: PageMeta = {
   robots: 'noindex,follow',
 };
 
+// A private page: noindex, and no `path` so it claims no canonical URL or og:url (like the 404 page).
 // Indexable pages never depend on it, so a sign-in form stays out of search results.
 export const ACCOUNT_META: PageMeta = {
   title: `Account — ${SITE_NAME}`,
   description: `Sign in to or create a ${SITE_NAME} account. No account is needed to use the tools.`,
-  path: ACCOUNT_ROUTE,
   robots: 'noindex,follow',
 };
 

@@ -102,6 +102,18 @@ describe('server-rendered SEO head', () => {
     expect((await request(app()).get('/sitemap.xml')).text).not.toContain('/account');
   });
 
+  it('account page: a private page has no canonical or og:url of its own', async () => {
+    const { text } = await request(app()).get('/account');
+    expect(text).not.toContain('rel="canonical"');
+    expect(text).not.toContain('property="og:url"');
+  });
+
+  it('does not serve the raw index.html template (it has no per-route tags)', async () => {
+    const res = await request(app()).get('/index.html');
+    expect(res.status).toBe(404);
+    expect(res.headers['content-type']).toMatch(/json/);
+  });
+
   it('every registered tool gets its registry title, description, canonical and JSON-LD', async () => {
     for (const tool of TOOLS) {
       const res = await request(app()).get(`/tools/${tool.slug}`);

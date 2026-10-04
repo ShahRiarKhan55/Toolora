@@ -83,7 +83,10 @@ export function createAuth({
 
     async verifyLogin(email: string, password: string): Promise<AuthUser> {
       const user = await prisma.user.findUnique({ where: { email } });
-      dummyHash ??= hashPassword(randomBytes(16).toString('hex'));
+      dummyHash ??= hashPassword(randomBytes(16).toString('hex')).catch((err: unknown) => {
+        dummyHash = undefined; // do not cache a "busy" refusal
+        throw err;
+      });
       const ok = await verifyPassword(password, user?.passwordHash ?? (await dummyHash));
       if (!user || !ok) throw invalidCredentials();
       return { id: user.id, email: user.email };

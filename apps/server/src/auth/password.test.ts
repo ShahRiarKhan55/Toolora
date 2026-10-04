@@ -40,3 +40,18 @@ describe('password hashing', () => {
     expect(await verifyPassword('anything', stored)).toBe(false);
   });
 });
+
+describe('hashing backlog cap', () => {
+  it('refuses work beyond a small backlog instead of queueing without limit, then recovers', async () => {
+    const results = await Promise.allSettled(
+      Array.from({ length: 30 }, () => verifyPassword('x', 'scrypt$65536$8$1$c2FsdA==$aGFzaA==')),
+    );
+    const refused = results.filter(
+      (r) => r.status === 'rejected' && (r.reason as { status?: number }).status === 503,
+    );
+    expect(refused.length).toBeGreaterThan(0);
+    expect(refused.length).toBeLessThan(30);
+    // Slots are released once the burst drains.
+    expect(await verifyPassword('x', await hashPassword('x'))).toBe(true);
+  });
+});

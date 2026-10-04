@@ -122,4 +122,32 @@ describe('AccountPage', () => {
     await screen.findByText('me@example.test');
     expect(setItem).not.toHaveBeenCalled();
   });
+
+  it('moves focus to the new state after signing in and out, but not on first load', async () => {
+    fakeApi({ signedIn: true });
+    renderPage();
+    const signedIn = await screen.findByText(/Signed in as/);
+    expect(signedIn).not.toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+    const heading = await screen.findByRole('heading', { level: 2, name: 'Sign in' });
+    await waitFor(() => expect(heading).toHaveFocus());
+    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'me@example.test' } });
+    fireEvent.change(screen.getByLabelText(/Password/), {
+      target: { value: 'a long enough pass' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    const again = await screen.findByText(/Signed in as/);
+    await waitFor(() => expect(again).toHaveFocus());
+  });
+
+  it('reserves but hides the header account link until the session check answers', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined)),
+    );
+    renderPage();
+    // Tailwind CSS is not loaded in jsdom, so assert the class that does the hiding.
+    const link = screen.getAllByText('Sign in', { selector: 'a' })[0]!;
+    expect(link.closest('li')).toHaveClass('invisible');
+  });
 });

@@ -155,6 +155,27 @@ describe('POST /api/auth/login', () => {
     expect(unknown.headers['set-cookie']).toBeUndefined();
   });
 
+  it('sheds a flood of logins with a JSON 503 and still serves the next one', async () => {
+    const { email } = await register();
+    const flood = await Promise.all(
+      Array.from({ length: 30 }, () =>
+        post('/api/auth/login', { email: newEmail(), password: PASSWORD }),
+      ),
+    );
+    const busy = flood.filter((res) => res.status === 503);
+    expect(busy.length).toBeGreaterThan(0);
+    expect(busy[0]?.body).toEqual({
+      error: { code: 'busy', message: 'The server is busy. Try again in a moment.' },
+    });
+    expect(flood.every((res) => res.status === 401 || res.status === 503)).toBe(true);
+    // A refusal must not leave the unknown-email path (dummy hash) or the slots broken.
+    const next = await post('/api/auth/login', { email, password: PASSWORD });
+    expect(next.status).toBe(200);
+    expect((await post('/api/auth/login', { email: newEmail(), password: PASSWORD })).status).toBe(
+      401,
+    );
+  });
+
   it.each([
     {},
     { email: 'a@b.test' },

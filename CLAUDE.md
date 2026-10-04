@@ -29,7 +29,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests   | done  |
 | 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)  | done  |
 | 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)         | done  |
-| 13    | Full test pass, lint/build, UX/a11y/perf review                                       |       |
+| 13    | Full test pass, lint/build, UX/a11y/perf review                                       | done  |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -213,7 +213,7 @@ Authentication rules: only `resolveSubject(req, auth)` turns a request into a Su
 elsewhere for identity); never store or log passwords, raw session tokens or hashes; session tokens live only in the
 HttpOnly cookie (never URLs, `localStorage` or response bodies); state-changing `/api` routes must be same-origin
 JSON (`sameOriginJson`); no CORS; login failures stay one generic response; apply migrations with `npm run db:deploy`;
-rate limiting is absent and must be added in front of `/api/auth/*` before launch. Phase 11 groundwork: `ToolMeta.access` (default
+per-client rate limiting is absent and must be added in front of `/api/auth/*` before launch (the app only caps pending password hashes, `503 busy`). Phase 11 groundwork: `ToolMeta.access` (default
 `'public'`) declares a future requirement; `apps/server/src/access.ts` decides (`canAccess`), and
 `resolveSubject` is the one place a request becomes a Subject. Rules: never trust
 client-sent entitlement state; premium checks for server capabilities happen server-side; never put secrets in

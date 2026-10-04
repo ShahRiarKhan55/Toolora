@@ -288,8 +288,12 @@ state; the header shows "Sign in" or "Account". `AuthProvider` asks `/api/auth/s
 
 **Limitations and production notes.**
 
-- **No brute-force or rate limiting.** Scrypt makes each guess costly for the server too, so unthrottled
-  login/register is also a CPU/memory DoS surface. Put rate limiting in front of `/api/auth/*` before launch.
+- **No per-client rate limiting; this stays a deployment requirement.** Scrypt makes each guess costly for the
+  server too, so unthrottled login/register is a CPU/memory DoS surface (measured: 40 parallel logins delayed a
+  static file by ~350 ms). The app only has a resource guard: at most 8 password hashes may be pending, further
+  ones get `503 busy` at once (`auth/password.ts`). It does not slow down guessing by one client. Put rate
+  limiting in front of `/api/auth/*` before launch (it needs the proxy's view of the client IP, which the app
+  cannot know without a deployment decision).
 - No email verification, password reset, account deletion/change, "sign out everywhere" or common-password
   check. A forgotten password cannot be recovered yet.
 - Sessions are a fixed 14 days, with no idle timeout and no device list.

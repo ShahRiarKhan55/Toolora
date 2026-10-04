@@ -17,7 +17,7 @@ export function Logo({ className }: { className?: string }) {
     <Link
       to="/"
       className={cx(
-        'inline-flex items-center gap-2.5 rounded-control text-xl font-bold tracking-tight text-foreground',
+        'inline-flex min-h-11 items-center gap-2.5 rounded-control text-xl font-bold tracking-tight text-foreground',
         className,
       )}
     >
