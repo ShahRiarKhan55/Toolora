@@ -69,7 +69,7 @@ export const TOOLS: readonly ToolMeta[] = [
     name: 'Currency Converter',
     description:
       'Convert JPY, BDT, USD, EUR and 12 more currencies using daily reference exchange rates.',
-    category: 'japan',
+    category: 'currency',
     icon: 'yen',
     keywords: [
       'currency',
@@ -83,7 +83,6 @@ export const TOOLS: readonly ToolMeta[] = [
       'bdt to jpy',
       'usd',
       'forex',
-      'japan money',
     ],
     seoTitle: 'Currency Converter — JPY, BDT & More Exchange Rates — Toolora',
     seoDescription:

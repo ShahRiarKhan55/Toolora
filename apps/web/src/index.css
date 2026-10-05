@@ -44,6 +44,8 @@
   /* Category accents: each pairs an icon colour with its tint */
   --color-accent-japan: #be123c;
   --color-accent-japan-soft: #fff1f2;
+  --color-accent-currency: #047857;
+  --color-accent-currency-soft: #ecfdf5;
   --color-accent-student: #0369a1;
   --color-accent-student-soft: #f0f9ff;
   --color-accent-developer: #6d28d9;

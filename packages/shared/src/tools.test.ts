@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { meetsAccessLevel, requiredAccess } from './access';
-import { CATEGORY_IDS } from './categories';
+import { CATEGORIES, CATEGORY_IDS } from './categories';
+import { categoryMeta } from './pageMeta';
+import { getIndexableRoutes } from './sitemap';
 import {
   ALL_TOOLS_ROUTE,
   categoryRoute,
@@ -174,6 +176,36 @@ describe('getToolBySlug', () => {
 
   it('returns undefined for an empty slug', () => {
     expect(getToolBySlug('')).toBeUndefined();
+  });
+});
+
+describe('Currency category', () => {
+  it('is a real category that owns the Currency Converter', () => {
+    expect(CATEGORIES.map((c) => c.id)).toContain('currency');
+    expect(getToolBySlug('currency-converter')?.category).toBe('currency');
+    expect(getToolsByCategory('currency').map((t) => t.id)).toEqual(['currency-converter']);
+    expect(categoryRoute('currency')).toBe('/tools/currency');
+  });
+
+  it('keeps every Japan-specific tool in Japan', () => {
+    const japan = getToolsByCategory('japan').map((t) => t.id);
+    expect(japan).toEqual(
+      expect.arrayContaining([
+        'japanese-era-converter',
+        'japanese-age-calculator',
+        'japanese-postal-code-formatter',
+        'japanese-phone-number-formatter',
+      ]),
+    );
+    expect(japan).not.toContain('currency-converter');
+  });
+
+  it('has a unique, indexable category meta and sitemap entry', () => {
+    const meta = categoryMeta('currency');
+    expect(meta.title).toBe('Currency Tools — Toolora');
+    expect(meta.robots).toBe('index,follow');
+    expect(meta.path).toBe('/tools/currency');
+    expect(getIndexableRoutes().map((r) => r.path)).toContain('/tools/currency');
   });
 });
 

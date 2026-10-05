@@ -235,7 +235,19 @@ no accounts, no new environment variables, no secrets: neither provider needs a 
 - **Replace a provider / add one:** implement `RateProvider` (`latest(base) → RateTable`) using `getJson` + `buildTable`, and
   list it in `createCurrencyService`'s default `providers`. A keyed provider reads its key from `process.env` in
   `config.ts` (zod) and is passed in from `productionApp.ts`; never `VITE_*`, never logged. Historical rates are not
-  implemented (the interface has no such method yet; add it with the first provider that supports it).
+  implemented: see "Historical rates: deferred (Phase 20)" below.
+- **Historical rates: deferred (Phase 20, researched 2026-10-05).** `HistoricalRateProvider` (`services/currency/types.ts`)
+  is the only thing built: a type no provider implements. No endpoint, service method or chart exists. Candidates: (1)
+  ExchangeRate-API - the open-access endpoint is latest-only; history is a paid, keyed plan (cost/key = owner decision); the
+  free tier requires the "Rates By Exchange Rate API" attribution, which stays. (2) fawazahmed0 - date-versioned URLs
+  (`@YYYY-MM-DD`) exist and the repo is CC0, but it discloses no data source and promises no uptime, so redistribution
+  rights of the _data_ cannot be verified. (3) Frankfurter v2 - keyless history, but its rates "fall under each provider's
+  terms": BDT comes only from a blend of other countries' central banks (Italy, Russia, Norway, Poland, ...), several with
+  no published terms, and the blend can shift; pinning one `providers=` source for all 16 currencies is not possible. None is
+  clearly safe for a product that may become paid, and no data is faked or scraped instead. **To revisit:** a keyed
+  ExchangeRate-API history plan (or another provider with explicit commercial redistribution terms), then add
+  `GET /api/currency/history?base&symbols&days` (strict whitelist, max 30 days, unknown params 400, own TtlCache and rate
+  limit) and an inline-SVG chart; keep "daily reference rates" wording and show the rate date apart from fetch time.
 - **Another dynamic-data domain:** a new folder under `services/<domain>/` with its own types, providers and service, reusing
   `TtlCache`, `rateLimit` and `HttpError`, mounted in `app.ts` behind an optional dependency like `currency`.
 - **Cache** (`services/cache.ts`): 1 h TTL per base currency, at most 64 entries, concurrent misses share one upstream call,

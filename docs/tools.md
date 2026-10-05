@@ -181,3 +181,10 @@ from its registry entry; `sitemap.xml` lists every tool automatically. Adding a 
 beyond writing a unique `seoTitle`/`seoDescription`. The `ai` category has no tools, so it is `noindex`
 and absent from the sitemap until it has one. Details: `docs/architecture.md`, "SEO strategy". The server also
 injects the tags into the HTML it serves (`resolveRouteMeta`), so a new tool needs no server change.
+
+## Currency category (Phase 20)
+
+`currency` is a first-class category (`CATEGORY_IDS`, shown second after Japan). The Currency Converter lives there; route
+and variants (`/tools/jpy-to-bdt`, `/tools/bdt-to-jpy`) are unchanged. The category page lists the pair variants of its tools
+under "Popular conversions", derived from `TOOL_VARIANTS` (add a variant and the link appears). It is indexable and in the sitemap
+because it has a tool. Historical rates are deliberately not built; see `docs/architecture.md` 6c.

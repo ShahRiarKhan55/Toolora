@@ -80,4 +80,28 @@ describe('CategoryPage', () => {
     }
     expect(nav.queryByRole('link', { name: 'Japan Tools' })).not.toBeInTheDocument();
   });
+
+  it('shows the Currency Converter and links its deliberate pair pages', () => {
+    renderCategory('currency');
+    expect(screen.getByRole('heading', { level: 1, name: 'Currency Tools' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Currency Converter/ })).toHaveAttribute(
+      'href',
+      '/tools/currency-converter',
+    );
+    const pairs = within(screen.getByRole('region', { name: 'Popular conversions' }));
+    expect(pairs.getByRole('link', { name: 'JPY to BDT Converter' })).toHaveAttribute(
+      'href',
+      '/tools/jpy-to-bdt',
+    );
+    expect(pairs.getByRole('link', { name: 'BDT to JPY Converter' })).toHaveAttribute(
+      'href',
+      '/tools/bdt-to-jpy',
+    );
+  });
+
+  it('does not list the converter or pair links on the Japan category', () => {
+    renderCategory('japan');
+    expect(screen.queryByRole('link', { name: /Currency Converter/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Popular conversions' })).not.toBeInTheDocument();
+  });
 });

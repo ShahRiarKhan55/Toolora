@@ -34,6 +34,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 17    | Vercel deployment preparation (stateless Express function; not yet deployed)             | done  |
 | 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit     | done  |
 | 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy` | done  |
+| 20    | Currency category; historical rates researched and deferred (no suitable provider)       | done  |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -220,7 +221,7 @@ from `/api/currency/rates` (the amount never leaves the browser). Variant pages 
 `packages/shared/src/tools.ts`: `/tools/jpy-to-bdt`, `/tools/bdt-to-jpy`) are the same tool opened with a preset: own
 route, SEO metadata and copy (`tools/currency-converter/variantContent.tsx`), no second implementation, no tool card.
 Keep the ExchangeRate-API attribution link visible, credit the fallback provider truthfully, and never put a rate in
-static copy. Historical charts are deferred (Phase 20).
+static copy. Currency is its own category (`/tools/currency`). Historical charts are deferred: no provider has clear redistribution terms (`docs/architecture.md` 6c).
 
 ## Accounts and entitlements (Phase 11 boundary, Phase 12 authentication)
 

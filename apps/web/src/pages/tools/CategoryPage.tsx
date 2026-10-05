@@ -5,6 +5,8 @@ import {
   categoryRoute,
   getPopulatedCategories,
   getToolsByCategory,
+  toolRoute,
+  TOOL_VARIANTS,
 } from '@toolora/shared';
 import type { CategoryId } from '@toolora/shared';
 import { Link } from 'react-router-dom';
@@ -22,6 +24,9 @@ const categoryById = new Map(CATEGORIES.map((category) => [category.id, category
 export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
   const category = categoryById.get(categoryId)!;
   const tools = getToolsByCategory(categoryId);
+  // Deliberate pair pages (TOOL_VARIANTS) of this category's tools; they have no card of their own.
+  const toolIds = new Set(tools.map((tool) => tool.id));
+  const variants = TOOL_VARIANTS.filter((variant) => toolIds.has(variant.toolId));
   const otherCategories = getPopulatedCategories().filter((c) => c.id !== categoryId);
 
   useDocumentMeta(categoryMeta(categoryId));
@@ -65,6 +70,26 @@ export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
           </EmptyState>
         )}
       </div>
+
+      {variants.length > 0 && (
+        <section aria-labelledby="popular-conversions" className="mt-12">
+          <h2 id="popular-conversions" className="text-lg font-semibold">
+            Popular conversions
+          </h2>
+          <ul className="mt-3 flex flex-wrap gap-3">
+            {variants.map((variant) => (
+              <li key={variant.slug}>
+                <Link
+                  to={toolRoute(variant.slug)}
+                  className="inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 text-sm font-semibold hover:bg-surface-muted"
+                >
+                  {variant.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <nav aria-label="Other categories" className="mt-12 border-t border-border pt-8">
         <h2 className="text-sm font-semibold text-muted-foreground">Browse other categories</h2>
