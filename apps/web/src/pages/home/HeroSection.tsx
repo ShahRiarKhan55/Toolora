@@ -23,8 +23,8 @@ export function HeroSection() {
             Simple tools for everyday tasks.
           </h1>
           <p className="mt-4 text-lg text-muted-foreground sm:text-xl">
-            Toolora brings together useful online tools for developers, students and anyone handling
-            Japan-related tasks, each one focused on doing a single job well.
+            Toolora brings together fast, practical tools for work, study, development, finance and
+            everyday tasks, each one focused on doing a single job well.
           </p>
           <form role="search" onSubmit={handleSubmit} className="mt-8 max-w-xl">
             <Input

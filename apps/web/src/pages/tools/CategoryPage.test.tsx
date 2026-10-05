@@ -104,4 +104,20 @@ describe('CategoryPage', () => {
     expect(screen.queryByRole('link', { name: /Currency Converter/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Popular conversions' })).not.toBeInTheDocument();
   });
+
+  it.each([
+    ['text', 'Text Tools', ['Text Case Converter', 'Markdown Preview']],
+    ['finance', 'Finance Tools', ['Compound Interest Calculator', 'Loan Payment Calculator']],
+    ['time', 'Time Tools', ['Time Zone Converter', 'Business Days Calculator']],
+    ['developer', 'Developer Tools', ['URL Encoder / Decoder', 'HTML Entity Encoder / Decoder']],
+  ] as const)('lists the %s tools and no empty-state', (id, heading, names) => {
+    renderCategory(id);
+    expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+    for (const name of names) {
+      expect(
+        screen.getByRole('link', { name: new RegExp(name.split('/')[0]!.trim()) }),
+      ).toBeInTheDocument();
+    }
+    expect(screen.queryByText('No tools here yet')).not.toBeInTheDocument();
+  });
 });

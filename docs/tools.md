@@ -3,13 +3,17 @@
 How the tool registry and routing work, and the exact steps to add a new tool. See `CLAUDE.md` for
 the day-to-day rules this implements, and `docs/architecture.md` for the reasoning behind it.
 
-## Current catalog (17 tools)
+## Current catalog (25 tools)
 
-| Category  | Tool (route `/tools/<slug>`)                                                                                                                         |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Japan     | `currency-converter`, `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`       |
-| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                            |
-| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript` |
+| Category  | Tool (route `/tools/<slug>`)                                                                                                                                                                               |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Japan     | `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter` (the Currency Converter moved to Currency in Phase 20)                            |
+| Currency  | `currency-converter`                                                                                                                                                                                       |
+| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                                                                                  |
+| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript`, `url-encoder-decoder`, `html-entity-encoder-decoder` |
+| Text      | `text-case-converter`, `markdown-preview`                                                                                                                                                                  |
+| Finance   | `compound-interest-calculator`, `loan-payment-calculator`                                                                                                                                                  |
+| Time      | `time-zone-converter`, `business-days-calculator`                                                                                                                                                          |
 
 Phase 7 added the last seven of each row. Notes on what they do and deliberately do not do:
 
@@ -39,7 +43,7 @@ Phase 7 added the last seven of each row. Notes on what they do and deliberately
 ```
 /                          Home page
 /tools                     All Tools — searchable list of every tool
-/tools/<category>          Category page (japan | student | developer | ai)
+/tools/<category>          Category page (japan | currency | student | developer | text | finance | time | ai)
 /tools/<slug>              A single tool
 ```
 
@@ -188,3 +192,30 @@ injects the tags into the HTML it serves (`resolveRouteMeta`), so a new tool nee
 and variants (`/tools/jpy-to-bdt`, `/tools/bdt-to-jpy`) are unchanged. The category page lists the pair variants of its tools
 under "Popular conversions", derived from `TOOL_VARIANTS` (add a variant and the link appears). It is indexable and in the sitemap
 because it has a tool. Historical rates are deliberately not built; see `docs/architecture.md` 6c.
+
+## Phase 21 tools
+
+Eight deterministic, browser-only tools (`localOnly: true`, no accounts, no network). Shared helpers: `components/tool/TextResult`
+(read-only plain-text result + copy), `components/tool/CurrencySelect` and `lib/formatMoney` (display-only currency label for the
+two finance tools; no rates), `lib/isoDate` and `lib/parseDecimal` (reused).
+
+- **URL Encoder / Decoder** — `encodeURIComponent`/`decodeURIComponent` only (component semantics, explained in the UI; `+` is not a
+  space). Lone surrogates become U+FFFD instead of throwing; malformed `%` sequences give an error, never a crash.
+- **HTML Entity Encoder / Decoder** — escapes `& < > " '` (optionally all non-ASCII as `&#N;`). Decoding uses a detached
+  `<textarea>` (tags stay text, nothing executes) and rejects `&name;` that is not a real entity or a numeric one outside Unicode.
+  Output is only ever shown in a read-only textarea.
+- **Text Case Converter** — lower, UPPER, Title (every word), Sentence, camel, Pascal, snake, kebab. Locale-independent; line breaks
+  kept; programming cases work per line and split existing camelCase/acronyms. No language-aware title casing.
+- **Markdown Preview** — `react-markdown` (React elements, no `innerHTML`) with an allow-list of elements: headings (shown from
+  h3 down so the page keeps one h1), paragraphs, em/strong, links (`rel="noopener noreferrer nofollow"`, `javascript:`/`data:` URLs
+  dropped by the library), lists, code, fenced code, blockquotes, rules. Raw HTML is never parsed; images are not allowed (no outside
+  requests). Dependency cost: it adds a lazy chunk only for this tool.
+- **Compound Interest** — `A = P(1 + r/n)^(nt)`, yearly/half-yearly/quarterly/monthly/daily (365), time in years or months, principal > 0,
+  rate 0–100 %, time ≤ 100 years. Rounded only for display.
+- **Loan Payment** — standard amortization (`P·r / (1 − (1+r)^−n)`, 0 % handled), monthly/biweekly(26)/weekly(52), term in years or
+  months (≤ 100 years), yearly amortization summary whose columns add up to the totals.
+- **Time Zone Converter** — `Intl.DateTimeFormat` only (zone list from `Intl.supportedValuesOf` plus UTC). A local time is resolved by
+  bracketing the zone offset a day either side: no candidate = skipped by a DST gap (error), two = repeated (earlier used and flagged).
+  Years 1900–2100.
+- **Business Days** — Monday–Friday, no holidays (stated in the UI). Both ends included by default (like `NETWORKDAYS`); either can be
+  excluded; reversed dates are swapped and flagged.

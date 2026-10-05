@@ -179,6 +179,68 @@ describe('getToolBySlug', () => {
   });
 });
 
+const PHASE_21_TOOLS = {
+  'url-encoder-decoder': 'developer',
+  'html-entity-encoder-decoder': 'developer',
+  'text-case-converter': 'text',
+  'markdown-preview': 'text',
+  'compound-interest-calculator': 'finance',
+  'loan-payment-calculator': 'finance',
+  'time-zone-converter': 'time',
+  'business-days-calculator': 'time',
+} as const;
+
+describe('Phase 21 tools and categories', () => {
+  it('registers exactly the eight new tools in their categories, each local-only', () => {
+    for (const [id, category] of Object.entries(PHASE_21_TOOLS)) {
+      const tool = getToolBySlug(id);
+      expect(tool?.id, id).toBe(id);
+      expect(tool?.category, id).toBe(category);
+      expect(tool?.localOnly, id).toBe(true);
+      expect(toolRoute(tool!.slug)).toBe('/tools/' + id);
+    }
+    expect(TOOLS).toHaveLength(17 + 8);
+  });
+
+  it('has unique SEO titles and descriptions across the whole registry', () => {
+    expect(new Set(TOOLS.map((t) => t.seoTitle)).size).toBe(TOOLS.length);
+    expect(new Set(TOOLS.map((t) => t.seoDescription)).size).toBe(TOOLS.length);
+    for (const id of Object.keys(PHASE_21_TOOLS)) {
+      expect(getToolBySlug(id)!.seoTitle).toMatch(/— Toolora$/);
+    }
+  });
+
+  it('adds Text, Finance and Time as populated categories without duplicating ids', () => {
+    expect(new Set(CATEGORY_IDS).size).toBe(CATEGORY_IDS.length);
+    for (const id of ['text', 'finance', 'time'] as const) {
+      expect(CATEGORIES.map((c) => c.id)).toContain(id);
+      expect(getToolsByCategory(id).length).toBeGreaterThan(0);
+      expect(categoryMeta(id).robots).toBe('index,follow');
+      expect(getIndexableRoutes().map((r) => r.path)).toContain(categoryRoute(id));
+    }
+    expect(getToolsByCategory('developer').map((t) => t.id)).toEqual(
+      expect.arrayContaining([
+        'url-encoder-decoder',
+        'html-entity-encoder-decoder',
+        'json-formatter',
+      ]),
+    );
+  });
+
+  it('puts every new tool in the sitemap', () => {
+    const paths = getIndexableRoutes().map((r) => r.path);
+    for (const id of Object.keys(PHASE_21_TOOLS)) expect(paths).toContain('/tools/' + id);
+  });
+
+  it('leaves the earlier categories untouched', () => {
+    expect(getToolsByCategory('currency').map((t) => t.id)).toEqual(['currency-converter']);
+    expect(getToolsByCategory('student').map((t) => t.id)).toEqual(
+      expect.arrayContaining(['gpa-calculator', 'percentage-grade-calculator', 'word-counter']),
+    );
+    expect(getToolsByCategory('ai')).toEqual([]);
+  });
+});
+
 describe('Currency category', () => {
   it('is a real category that owns the Currency Converter', () => {
     expect(CATEGORIES.map((c) => c.id)).toContain('currency');

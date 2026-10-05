@@ -35,6 +35,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit     | done  |
 | 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy` | done  |
 | 20    | Currency category; historical rates researched and deferred (no suitable provider)       | done  |
+| 21    | 8 new tools; Text, Finance and Time categories; `react-markdown` for Markdown Preview    | done  |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -44,7 +45,7 @@ stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, l
 accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
 phases land.
 
-The app now has real routes (`react-router-dom`), a working tool registry with all 17 tools (10 MVP + 7 from Phase 7), and a
+The app now has real routes (`react-router-dom`), a working tool registry with all 25 tools (10 MVP, 7 from Phase 7, 8 from Phase 21), and a
 client-side search over it (`apps/web/src/lib/searchTools.ts`). Phase 5 added the SEO foundation
 (see "SEO principles"): every page sets canonical/OG/Twitter/robots tags and JSON-LD client-side
 (`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. Phase 8 made

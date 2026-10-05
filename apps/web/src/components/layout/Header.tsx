@@ -79,7 +79,7 @@ export function Header() {
     <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-surface">
       <Container className="flex h-16 items-center justify-between gap-4">
         <Logo />
-        <nav aria-label="Main" className="hidden md:block">
+        <nav aria-label="Main" className="hidden lg:block">
           <NavList layout="bar" />
         </nav>
         <button
@@ -88,7 +88,7 @@ export function Header() {
           aria-expanded={menuOpen}
           aria-controls={menuId}
           onClick={() => setMenuOpen((open) => !open)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-control border border-border-strong px-3 text-sm font-semibold hover:bg-surface-muted md:hidden"
+          className="inline-flex min-h-11 items-center gap-2 rounded-control border border-border-strong px-3 text-sm font-semibold hover:bg-surface-muted lg:hidden"
         >
           {menuOpen ? <CloseIcon /> : <MenuIcon />}
           Menu
@@ -98,7 +98,7 @@ export function Header() {
         id={menuId}
         aria-label="Mobile"
         hidden={!menuOpen}
-        className="border-t border-border md:hidden"
+        className="border-t border-border lg:hidden"
       >
         <Container>
           <NavList layout="menu" onNavigate={() => setMenuOpen(false)} />

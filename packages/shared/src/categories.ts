@@ -1,7 +1,16 @@
 // Site-structure constants, not the tool registry (Phase 3): which categories exist and how they are
 // described. The registry's `ToolMeta.category` will reuse `CategoryId`.
 
-export const CATEGORY_IDS = ['japan', 'currency', 'student', 'developer', 'ai'] as const;
+export const CATEGORY_IDS = [
+  'japan',
+  'currency',
+  'student',
+  'developer',
+  'text',
+  'finance',
+  'time',
+  'ai',
+] as const;
 
 export type CategoryId = (typeof CATEGORY_IDS)[number];
 
@@ -33,7 +42,23 @@ export const CATEGORIES: readonly Category[] = [
   {
     id: 'developer',
     name: 'Developer',
-    description: 'JSON, Base64, UUID and timestamp utilities for everyday development.',
+    description:
+      'JSON, Base64, URL, HTML entity, UUID and timestamp utilities for everyday development.',
+  },
+  {
+    id: 'text',
+    name: 'Text',
+    description: 'Change text case and preview Markdown, entirely in your browser.',
+  },
+  {
+    id: 'finance',
+    name: 'Finance',
+    description: 'Compound interest and loan payment calculators with the assumptions shown.',
+  },
+  {
+    id: 'time',
+    name: 'Time',
+    description: 'Time zone conversion and business day counting for scheduling and planning.',
   },
   {
     id: 'ai',

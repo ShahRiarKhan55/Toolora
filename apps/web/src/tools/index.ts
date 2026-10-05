@@ -16,6 +16,14 @@ import { content as gpaPercentageConverterContent } from './gpa-percentage-conve
 import { content as dateDifferenceCalculatorContent } from './date-difference-calculator/content';
 import { content as japanesePostalCodeFormatterContent } from './japanese-postal-code-formatter/content';
 import { content as japanesePhoneNumberFormatterContent } from './japanese-phone-number-formatter/content';
+import { content as urlEncoderDecoderContent } from './url-encoder-decoder/content';
+import { content as htmlEntityEncoderDecoderContent } from './html-entity-encoder-decoder/content';
+import { content as textCaseConverterContent } from './text-case-converter/content';
+import { content as markdownPreviewContent } from './markdown-preview/content';
+import { content as compoundInterestCalculatorContent } from './compound-interest-calculator/content';
+import { content as loanPaymentCalculatorContent } from './loan-payment-calculator/content';
+import { content as timeZoneConverterContent } from './time-zone-converter/content';
+import { content as businessDaysCalculatorContent } from './business-days-calculator/content';
 import { variantContent } from './currency-converter/variantContent';
 import type { ToolContent, ToolImplementation } from './types';
 
@@ -149,6 +157,70 @@ export const TOOL_IMPLEMENTATIONS: Readonly<Record<string, ToolImplementation>> 
       })),
     ),
     content: japanesePhoneNumberFormatterContent,
+  },
+  'url-encoder-decoder': {
+    Component: lazy(() =>
+      import('./url-encoder-decoder/UrlEncoderDecoderTool').then((m) => ({
+        default: m.UrlEncoderDecoderTool,
+      })),
+    ),
+    content: urlEncoderDecoderContent,
+  },
+  'html-entity-encoder-decoder': {
+    Component: lazy(() =>
+      import('./html-entity-encoder-decoder/HtmlEntityEncoderDecoderTool').then((m) => ({
+        default: m.HtmlEntityEncoderDecoderTool,
+      })),
+    ),
+    content: htmlEntityEncoderDecoderContent,
+  },
+  'text-case-converter': {
+    Component: lazy(() =>
+      import('./text-case-converter/TextCaseConverterTool').then((m) => ({
+        default: m.TextCaseConverterTool,
+      })),
+    ),
+    content: textCaseConverterContent,
+  },
+  'markdown-preview': {
+    Component: lazy(() =>
+      import('./markdown-preview/MarkdownPreviewTool').then((m) => ({
+        default: m.MarkdownPreviewTool,
+      })),
+    ),
+    content: markdownPreviewContent,
+  },
+  'compound-interest-calculator': {
+    Component: lazy(() =>
+      import('./compound-interest-calculator/CompoundInterestCalculatorTool').then((m) => ({
+        default: m.CompoundInterestCalculatorTool,
+      })),
+    ),
+    content: compoundInterestCalculatorContent,
+  },
+  'loan-payment-calculator': {
+    Component: lazy(() =>
+      import('./loan-payment-calculator/LoanPaymentCalculatorTool').then((m) => ({
+        default: m.LoanPaymentCalculatorTool,
+      })),
+    ),
+    content: loanPaymentCalculatorContent,
+  },
+  'time-zone-converter': {
+    Component: lazy(() =>
+      import('./time-zone-converter/TimeZoneConverterTool').then((m) => ({
+        default: m.TimeZoneConverterTool,
+      })),
+    ),
+    content: timeZoneConverterContent,
+  },
+  'business-days-calculator': {
+    Component: lazy(() =>
+      import('./business-days-calculator/BusinessDaysCalculatorTool').then((m) => ({
+        default: m.BusinessDaysCalculatorTool,
+      })),
+    ),
+    content: businessDaysCalculatorContent,
   },
 };
 

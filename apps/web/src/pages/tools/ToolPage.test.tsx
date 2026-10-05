@@ -92,12 +92,38 @@ describe('ToolPage variants', () => {
 
   it('renders the converter preset for the pair', async () => {
     renderVariant('bdt-to-jpy');
-    expect(await screen.findByLabelText('From')).toHaveValue('BDT');
+    // The first import of the lazy converter chunk can exceed the 1 s default when the suite runs in parallel.
+    expect(await screen.findByLabelText('From', {}, { timeout: 5000 })).toHaveValue('BDT');
     expect(screen.getByLabelText('To')).toHaveValue('JPY');
   });
 
   it('shows the variant explanation, not the general copy', () => {
     renderVariant('jpy-to-bdt');
     expect(screen.getByText(/illustrative rate/)).toBeInTheDocument();
+  });
+});
+
+describe('Phase 21 tool pages', () => {
+  // The label of one control that only that tool's workspace has, so a rendered label proves the
+  // lazy workspace (not just the page shell) loaded for the route.
+  it.each([
+    ['url-encoder-decoder', /Text or percent-encoded string/],
+    ['html-entity-encoder-decoder', /Text or HTML entities/],
+    ['text-case-converter', 'Convert to'],
+    ['markdown-preview', 'Markdown'],
+    ['compound-interest-calculator', 'Annual interest rate (%)'],
+    ['loan-payment-calculator', 'Payment frequency'],
+    ['time-zone-converter', 'From time zone'],
+    ['business-days-calculator', /Start date/],
+  ])('renders the %s workspace under a single h1', async (slug, label) => {
+    const tool = getToolBySlug(slug)!;
+    renderTool(slug);
+    expect(await screen.findByLabelText(label, {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: tool.name })).toBeInTheDocument();
+    const related = within(
+      screen.getByRole('heading', { name: 'Related tools' }).closest('section')!,
+    );
+    expect(related.getAllByRole('link').length).toBeGreaterThan(0);
   });
 });

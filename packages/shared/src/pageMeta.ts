@@ -61,7 +61,7 @@ export function homeMeta(origin: string | undefined): PageMeta {
   return {
     title: `${SITE_NAME} – Simple online tools for everyday tasks`,
     description:
-      'Toolora is a collection of simple online tools for Japan-related tasks, students and developers. Tools are built to run in your browser.',
+      'Toolora is a collection of fast, practical online tools for work, study, development, finance and everyday tasks. Tools are built to run in your browser.',
     path: HOME_ROUTE,
     structuredData: buildWebSiteStructuredData(origin),
   };
