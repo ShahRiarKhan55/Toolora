@@ -3,17 +3,17 @@
 How the tool registry and routing work, and the exact steps to add a new tool. See `CLAUDE.md` for
 the day-to-day rules this implements, and `docs/architecture.md` for the reasoning behind it.
 
-## Current catalog (25 tools)
+## Current catalog (31 tools)
 
-| Category  | Tool (route `/tools/<slug>`)                                                                                                                                                                               |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Japan     | `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter` (the Currency Converter moved to Currency in Phase 20)                            |
-| Currency  | `currency-converter`                                                                                                                                                                                       |
-| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                                                                                  |
-| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript`, `url-encoder-decoder`, `html-entity-encoder-decoder` |
-| Text      | `text-case-converter`, `markdown-preview`                                                                                                                                                                  |
-| Finance   | `compound-interest-calculator`, `loan-payment-calculator`                                                                                                                                                  |
-| Time      | `time-zone-converter`, `business-days-calculator`                                                                                                                                                          |
+| Category  | Tool (route `/tools/<slug>`)                                                                                                                                                                                                                   |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Japan     | `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`, `japanese-consumption-tax-calculator`, `kana-width-converter` (the Currency Converter moved to Currency in Phase 20) |
+| Currency  | `currency-converter`                                                                                                                                                                                                                           |
+| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                                                                                                                      |
+| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript`, `url-encoder-decoder`, `html-entity-encoder-decoder`, `hash-generator`, `jwt-decoder`    |
+| Text      | `text-case-converter`, `markdown-preview`, `text-diff-checker`                                                                                                                                                                                 |
+| Finance   | `compound-interest-calculator`, `loan-payment-calculator`, `percentage-calculator`                                                                                                                                                             |
+| Time      | `time-zone-converter`, `business-days-calculator`                                                                                                                                                                                              |
 
 Phase 7 added the last seven of each row. Notes on what they do and deliberately do not do:
 
@@ -63,7 +63,7 @@ interface ToolMeta {
   slug: string; // URL segment: /tools/<slug>
   name: string;
   description: string; // card text
-  category: CategoryId; // 'japan' | 'student' | 'developer' | 'ai'
+  category: CategoryId; // 'japan' | 'currency' | 'student' | 'developer' | 'text' | 'finance' | 'time' | 'ai'
   icon: ToolIconId; // resolved to a component by apps/web/src/config/toolPresentation.ts
   keywords: readonly string[]; // matched by search alongside name/description/category
   seoTitle: string;
@@ -219,3 +219,29 @@ two finance tools; no rates), `lib/isoDate` and `lib/parseDecimal` (reused).
   Years 1900–2100.
 - **Business Days** — Monday–Friday, no holidays (stated in the UI). Both ends included by default (like `NETWORKDAYS`); either can be
   excluded; reversed dates are swapped and flagged.
+
+## Phase 23 tools and local discovery
+
+Six more browser-only tools (`localOnly: true`), each with pure `logic.ts`, tests and copy like the rest:
+
+- **Japanese Consumption Tax Calculator** (Japan) — standard 10 % and reduced 8 % only, tax-exclusive → tax-inclusive and back.
+  Exact BigInt arithmetic on hundredths of a yen (no float artifacts); the tax is rounded to whole yen (floor / half-up / ceil,
+  user's choice) and the other figure follows, so pre-tax + tax = total. Up to 2 decimals, ≤ ¥999,999,999,999. No exemptions,
+  special cases, invoice system or advice (stated in the UI).
+- **Kana & Width Converter** (Japan) — hiragana ↔ katakana by Unicode offset (ー, kanji and punctuation untouched; ヷ–ヺ stay);
+  full ↔ half width for ASCII, ideographic space and katakana (voiced marks split/merge: ガ ↔ ｶﾞ), scope selectable. Kana
+  punctuation 。「」、・ converts with katakana. ヮヰヱヵヶ have no half-width form.
+- **Percentage Calculator** (Finance) — X% of Y, X is what % of Y, percentage change (relative to |old|), increase/decrease by %.
+  Results cleaned to 12 significant digits; division by zero and change-from-zero give messages.
+- **Text Diff Checker** (Text) — line diff (LCS after trimming the common start/end), no dependency. Compare-on-click; capped at
+  4 M table cells (≈ 2000 × 2000 differing lines) with a friendly error. Rendered as a table of text nodes (never `innerHTML`), with
+  +/− signs and screen-reader labels besides colour. No inline word-level highlighting.
+- **Hash Generator** (Developer) — SHA-256/384/512 via `crypto.subtle.digest` over UTF-8, shown together as lowercase hex. No MD5/SHA-1.
+- **JWT Decoder** (Developer) — splits three Base64URL parts (no padding accepted), decodes UTF-8 JSON objects, lists the registered
+  claims (`iss sub aud exp nbf iat jti`; time claims as UTC dates, exp/nbf compared with the device clock). **Decodes only; never
+  verifies** — the UI says so, and that tokens stay local. JWE (5 parts) is rejected.
+
+**Header search** — a toggle under the header bar (so it cannot overflow the nav at any width) with the same `searchTools` filter as
+`/tools`: up to six links to tools, Enter opens `/tools?q=…`. **Recently used** (last 5 opened tool pages) and **Favorites**
+(star button on each tool page) are shown on the home page only when non-empty; storage rules are in `CLAUDE.md`, "Local
+preferences". **Category intros** live in `apps/web/src/config/categoryIntro.ts` (Japan, Currency, Text, Finance, Time).

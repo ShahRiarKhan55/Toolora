@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../lib/authContext';
 import { PRIMARY_NAV } from '../../config/navigation';
 import { Logo } from '../brand/Logo';
-import { CloseIcon, MenuIcon } from '../ui/icons';
+import { CloseIcon, MenuIcon, SearchIcon } from '../ui/icons';
 import { Container } from './Container';
+import { HeaderSearchPanel } from './HeaderSearch';
 
 function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: () => void }) {
   const { enabled, status, user } = useAuth();
@@ -48,23 +49,31 @@ function NavList({ layout, onNavigate }: { layout: 'bar' | 'menu'; onNavigate?: 
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const searchToggleRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const menuId = useId();
+  const searchId = useId();
+  const anyOpen = menuOpen || searchOpen;
 
-  // While the mobile menu is open: Escape closes it (and returns focus to its button), and so does
-  // a press anywhere outside the header. The page is never scroll-locked: the menu is not a modal.
+  // While the mobile menu or the search panel is open: Escape closes it (and returns focus to its
+  // button), and so does a press anywhere outside the header. The page is never scroll-locked:
+  // neither is a modal.
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!anyOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMenuOpen(false);
-        toggleRef.current?.focus();
+        setSearchOpen(false);
+        (menuOpen ? toggleRef : searchToggleRef).current?.focus();
       }
     };
     const onPointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Node && headerRef.current?.contains(event.target))) {
         setMenuOpen(false);
+        setSearchOpen(false);
       }
     };
     document.addEventListener('keydown', onKeyDown);
@@ -73,7 +82,12 @@ export function Header() {
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('pointerdown', onPointerDown);
     };
-  }, [menuOpen]);
+  }, [anyOpen, menuOpen]);
+
+  // Opening the search panel puts the cursor in the box.
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
 
   return (
     <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-surface">
@@ -82,18 +96,46 @@ export function Header() {
         <nav aria-label="Main" className="hidden lg:block">
           <NavList layout="bar" />
         </nav>
-        <button
-          ref={toggleRef}
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls={menuId}
-          onClick={() => setMenuOpen((open) => !open)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-control border border-border-strong px-3 text-sm font-semibold hover:bg-surface-muted lg:hidden"
-        >
-          {menuOpen ? <CloseIcon /> : <MenuIcon />}
-          Menu
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            ref={searchToggleRef}
+            type="button"
+            aria-label="Search tools"
+            aria-expanded={searchOpen}
+            aria-controls={searchId}
+            onClick={() => {
+              setSearchOpen((open) => !open);
+              setMenuOpen(false);
+            }}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-control border border-border-strong px-3 text-sm font-semibold hover:bg-surface-muted"
+          >
+            {searchOpen ? <CloseIcon /> : <SearchIcon />}
+            <span aria-hidden="true" className="hidden sm:inline">
+              Search
+            </span>
+          </button>
+          <button
+            ref={toggleRef}
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls={menuId}
+            onClick={() => {
+              setMenuOpen((open) => !open);
+              setSearchOpen(false);
+            }}
+            className="inline-flex min-h-11 items-center gap-2 rounded-control border border-border-strong px-3 text-sm font-semibold hover:bg-surface-muted lg:hidden"
+          >
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
+            Menu
+          </button>
+        </div>
       </Container>
+      <HeaderSearchPanel
+        id={searchId}
+        open={searchOpen}
+        inputRef={searchInputRef}
+        onDone={() => setSearchOpen(false)}
+      />
       <nav
         id={menuId}
         aria-label="Mobile"

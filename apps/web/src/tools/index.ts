@@ -24,6 +24,12 @@ import { content as compoundInterestCalculatorContent } from './compound-interes
 import { content as loanPaymentCalculatorContent } from './loan-payment-calculator/content';
 import { content as timeZoneConverterContent } from './time-zone-converter/content';
 import { content as businessDaysCalculatorContent } from './business-days-calculator/content';
+import { content as japaneseConsumptionTaxCalculatorContent } from './japanese-consumption-tax-calculator/content';
+import { content as kanaWidthConverterContent } from './kana-width-converter/content';
+import { content as percentageCalculatorContent } from './percentage-calculator/content';
+import { content as textDiffCheckerContent } from './text-diff-checker/content';
+import { content as hashGeneratorContent } from './hash-generator/content';
+import { content as jwtDecoderContent } from './jwt-decoder/content';
 import { variantContent } from './currency-converter/variantContent';
 import type { ToolContent, ToolImplementation } from './types';
 
@@ -221,6 +227,56 @@ export const TOOL_IMPLEMENTATIONS: Readonly<Record<string, ToolImplementation>> 
       })),
     ),
     content: businessDaysCalculatorContent,
+  },
+  'japanese-consumption-tax-calculator': {
+    Component: lazy(() =>
+      import('./japanese-consumption-tax-calculator/JapaneseConsumptionTaxCalculatorTool').then(
+        (m) => ({
+          default: m.JapaneseConsumptionTaxCalculatorTool,
+        }),
+      ),
+    ),
+    content: japaneseConsumptionTaxCalculatorContent,
+  },
+  'kana-width-converter': {
+    Component: lazy(() =>
+      import('./kana-width-converter/KanaWidthConverterTool').then((m) => ({
+        default: m.KanaWidthConverterTool,
+      })),
+    ),
+    content: kanaWidthConverterContent,
+  },
+  'percentage-calculator': {
+    Component: lazy(() =>
+      import('./percentage-calculator/PercentageCalculatorTool').then((m) => ({
+        default: m.PercentageCalculatorTool,
+      })),
+    ),
+    content: percentageCalculatorContent,
+  },
+  'text-diff-checker': {
+    Component: lazy(() =>
+      import('./text-diff-checker/TextDiffCheckerTool').then((m) => ({
+        default: m.TextDiffCheckerTool,
+      })),
+    ),
+    content: textDiffCheckerContent,
+  },
+  'hash-generator': {
+    Component: lazy(() =>
+      import('./hash-generator/HashGeneratorTool').then((m) => ({
+        default: m.HashGeneratorTool,
+      })),
+    ),
+    content: hashGeneratorContent,
+  },
+  'jwt-decoder': {
+    Component: lazy(() =>
+      import('./jwt-decoder/JwtDecoderTool').then((m) => ({
+        default: m.JwtDecoderTool,
+      })),
+    ),
+    content: jwtDecoderContent,
   },
 };
 

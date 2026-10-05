@@ -20,6 +20,8 @@ interface ToolPageLayoutProps {
   breadcrumbs: readonly BreadcrumbItem[];
   /** Only set for tools that really process input in the browser; shows the privacy note. */
   localOnly?: boolean;
+  /** Page-level actions under the title, e.g. the favourite button. */
+  actions?: ReactNode;
   /** The tool itself: inputs, results and actions. */
   children: ReactNode;
   howToUse?: ReactNode;
@@ -58,6 +60,7 @@ export function ToolPageLayout({
   description,
   breadcrumbs,
   localOnly = false,
+  actions,
   children,
   howToUse,
   about,
@@ -74,6 +77,7 @@ export function ToolPageLayout({
             Runs in your browser. Your input is not sent anywhere.
           </p>
         )}
+        {actions && <div className="mt-4">{actions}</div>}
       </PageHeader>
 
       <Card as="section" aria-label="Tool workspace" className="mt-8">

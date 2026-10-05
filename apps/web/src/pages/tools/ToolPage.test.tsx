@@ -103,6 +103,28 @@ describe('ToolPage variants', () => {
   });
 });
 
+describe('Phase 23 tool pages', () => {
+  it.each([
+    ['japanese-consumption-tax-calculator', 'Amount (JPY)'],
+    ['kana-width-converter', 'Conversion'],
+    ['percentage-calculator', 'What do you want to work out?'],
+    ['text-diff-checker', 'Original text'],
+    ['hash-generator', 'Text to hash'],
+    ['jwt-decoder', 'JWT'],
+  ])('renders the %s workspace under a single h1', async (slug, label) => {
+    const tool = getToolBySlug(slug)!;
+    renderTool(slug);
+    expect(await screen.findByLabelText(label, {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: tool.name })).toBeInTheDocument();
+    expect(screen.getByText(/Runs in your browser/)).toBeInTheDocument();
+    const related = within(
+      screen.getByRole('heading', { name: 'Related tools' }).closest('section')!,
+    );
+    expect(related.getAllByRole('link')).toHaveLength(3);
+  });
+});
+
 describe('Phase 21 tool pages', () => {
   // The label of one control that only that tool's workspace has, so a rendered label proves the
   // lazy workspace (not just the page shell) loaded for the route.

@@ -199,7 +199,8 @@ describe('Phase 21 tools and categories', () => {
       expect(tool?.localOnly, id).toBe(true);
       expect(toolRoute(tool!.slug)).toBe('/tools/' + id);
     }
-    expect(TOOLS).toHaveLength(17 + 8);
+    // The registry has since grown (Phase 23): its size is asserted there.
+    expect(TOOLS.length).toBeGreaterThanOrEqual(17 + 8);
   });
 
   it('has unique SEO titles and descriptions across the whole registry', () => {
@@ -238,6 +239,57 @@ describe('Phase 21 tools and categories', () => {
       expect.arrayContaining(['gpa-calculator', 'percentage-grade-calculator', 'word-counter']),
     );
     expect(getToolsByCategory('ai')).toEqual([]);
+  });
+});
+
+const PHASE_23_TOOLS = {
+  'japanese-consumption-tax-calculator': 'japan',
+  'kana-width-converter': 'japan',
+  'percentage-calculator': 'finance',
+  'text-diff-checker': 'text',
+  'hash-generator': 'developer',
+  'jwt-decoder': 'developer',
+} as const;
+
+describe('Phase 23 tools', () => {
+  it('registers exactly six new local-only tools in their categories, at 31 tools in total', () => {
+    for (const [id, category] of Object.entries(PHASE_23_TOOLS)) {
+      const tool = getToolBySlug(id);
+      expect(tool?.id, id).toBe(id);
+      expect(tool?.category, id).toBe(category);
+      expect(tool?.localOnly, id).toBe(true);
+      expect(toolRoute(tool!.slug)).toBe('/tools/' + id);
+    }
+    expect(TOOLS).toHaveLength(17 + 8 + 6);
+  });
+
+  it('puts every new tool in the sitemap with distinct SEO text', () => {
+    const paths = getIndexableRoutes().map((r) => r.path);
+    for (const id of Object.keys(PHASE_23_TOOLS)) {
+      expect(paths).toContain('/tools/' + id);
+      expect(getToolBySlug(id)!.seoTitle).toMatch(/— Toolora$/);
+    }
+    expect(new Set(TOOLS.map((t) => t.seoTitle)).size).toBe(TOOLS.length);
+  });
+
+  it('links related tools both ways where the pairing is genuine', () => {
+    const pairs = [
+      ['japanese-consumption-tax-calculator', 'percentage-calculator'],
+      ['percentage-calculator', 'compound-interest-calculator'],
+      ['percentage-calculator', 'loan-payment-calculator'],
+      ['text-diff-checker', 'word-counter'],
+      ['text-diff-checker', 'text-case-converter'],
+      ['text-diff-checker', 'markdown-preview'],
+      ['hash-generator', 'base64-encoder-decoder'],
+      ['jwt-decoder', 'base64-encoder-decoder'],
+      ['jwt-decoder', 'json-formatter'],
+      ['kana-width-converter', 'japanese-postal-code-formatter'],
+      ['kana-width-converter', 'japanese-phone-number-formatter'],
+    ] as const;
+    for (const [a, b] of pairs) {
+      expect(getToolBySlug(a)!.related, a + ' -> ' + b).toContain(b);
+      expect(getToolBySlug(b)!.related, b + ' -> ' + a).toContain(a);
+    }
   });
 });
 

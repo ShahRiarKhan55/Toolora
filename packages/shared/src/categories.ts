@@ -26,7 +26,8 @@ export const CATEGORIES: readonly Category[] = [
   {
     id: 'japan',
     name: 'Japan',
-    description: 'Era, age, postal code and phone helpers for life, study and work in Japan.',
+    description:
+      'Era, age, consumption tax, kana, postal code and phone helpers for life, study and work in Japan.',
   },
   {
     id: 'currency',
@@ -43,17 +44,19 @@ export const CATEGORIES: readonly Category[] = [
     id: 'developer',
     name: 'Developer',
     description:
-      'JSON, Base64, URL, HTML entity, UUID and timestamp utilities for everyday development.',
+      'JSON, Base64, URL, hash, JWT, UUID and timestamp utilities for everyday development.',
   },
   {
     id: 'text',
     name: 'Text',
-    description: 'Change text case and preview Markdown, entirely in your browser.',
+    description:
+      'Change text case, compare two texts and preview Markdown, entirely in your browser.',
   },
   {
     id: 'finance',
     name: 'Finance',
-    description: 'Compound interest and loan payment calculators with the assumptions shown.',
+    description:
+      'Percentage, compound interest and loan payment calculators with the assumptions shown.',
   },
   {
     id: 'time',

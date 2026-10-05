@@ -18,6 +18,35 @@ function renderCategory(categoryId: CategoryId) {
   );
 }
 
+describe('CategoryPage introductions', () => {
+  it.each(['japan', 'currency', 'text', 'finance', 'time'] as const)(
+    'explains what the %s category is for, before its tools',
+    (id) => {
+      renderCategory(id);
+      const paragraphs = document.querySelectorAll('div.space-y-3 > p');
+      expect(paragraphs.length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    },
+  );
+
+  it('keeps the Currency copy honest about daily reference rates', () => {
+    renderCategory('currency');
+    expect(screen.getByText(/published once a day, not live/)).toBeInTheDocument();
+    expect(document.body.textContent).toMatch(/daily reference exchange rates/);
+    expect(document.body.textContent).not.toMatch(/real-time|live rate/i);
+  });
+
+  it('keeps the Japan copy independent of any government body', () => {
+    renderCategory('japan');
+    expect(screen.getByText(/not connected to any government body/)).toBeInTheDocument();
+  });
+
+  it('shows no intro for a category without one', () => {
+    renderCategory('developer');
+    expect(document.querySelector('div.space-y-3 > p')).toBeNull();
+  });
+});
+
 describe('CategoryPage', () => {
   it('shows a visible tool count for a category with tools', () => {
     renderCategory('developer');

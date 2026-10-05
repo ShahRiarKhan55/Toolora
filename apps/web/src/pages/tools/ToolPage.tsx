@@ -7,9 +7,11 @@ import {
   toolRoute,
 } from '@toolora/shared';
 import type { ToolMeta, ToolVariant } from '@toolora/shared';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { ToolPageLayout } from '../../components/layout/ToolPageLayout';
+import { FavoriteButton } from '../../components/tool/FavoriteButton';
 import { getRelatedTools } from '../../lib/relatedTools';
+import { recordRecentTool } from '../../lib/toolPrefs';
 import { PUBLIC_SITE_ORIGIN } from '../../lib/siteUrl';
 import { useDocumentMeta } from '../../lib/useDocumentMeta';
 import { TOOL_IMPLEMENTATIONS, TOOL_VARIANT_CONTENT } from '../../tools';
@@ -25,11 +27,15 @@ export function ToolPage({ tool, variant }: { tool: ToolMeta; variant?: ToolVari
   const content = (variant && TOOL_VARIANT_CONTENT[variant.slug]) || implementation.content;
   const Component = implementation.Component;
 
+  // Opening a tool page is the "use": remembers the slug only, never anything typed into the tool.
+  useEffect(() => recordRecentTool(tool.slug), [tool.slug]);
+
   return (
     <ToolPageLayout
       title={page.name}
       description={page.description}
       localOnly={tool.localOnly}
+      actions={<FavoriteButton slug={tool.slug} />}
       breadcrumbs={[
         { label: 'Home', href: '/' },
         { label: `${category.name} Tools`, href: categoryRoute(category.id) },

@@ -17,12 +17,14 @@ import { ToolCard } from '../../components/tool/ToolCard';
 import { ButtonLink } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { SearchIcon } from '../../components/ui/icons';
+import { CATEGORY_INTRO } from '../../config/categoryIntro';
 import { useDocumentMeta } from '../../lib/useDocumentMeta';
 
 const categoryById = new Map(CATEGORIES.map((category) => [category.id, category]));
 
 export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
   const category = categoryById.get(categoryId)!;
+  const intro = CATEGORY_INTRO[categoryId];
   const tools = getToolsByCategory(categoryId);
   // Deliberate pair pages (TOOL_VARIANTS) of this category's tools; they have no card of their own.
   const toolIds = new Set(tools.map((tool) => tool.id));
@@ -45,6 +47,14 @@ export function CategoryPage({ categoryId }: { categoryId: CategoryId }) {
             : 'No tools in this category yet.'}
         </p>
       </PageHeader>
+
+      {intro && (
+        <div className="mt-6 max-w-content space-y-3 text-muted-foreground">
+          {intro.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      )}
 
       <div className="mt-8">
         {tools.length > 0 ? (

@@ -1,5 +1,6 @@
 import { CATEGORIES, toolRoute } from '@toolora/shared';
 import type { ToolMeta } from '@toolora/shared';
+import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { CATEGORY_PRESENTATION } from '../../config/categoryPresentation';
 import { TOOL_ICON } from '../../config/toolPresentation';
@@ -22,20 +23,18 @@ interface ToolCardProps {
  * giving it a touch target far larger than the 44px minimum.
  */
 export function ToolCard({ tool, showCategory = true }: ToolCardProps) {
+  // Per instance, not per tool: one tool can appear twice on a page (favorites and featured).
+  const titleId = useId();
   const Icon = TOOL_ICON[tool.icon];
   const { tile } = CATEGORY_PRESENTATION[tool.category];
   const category = categoryById.get(tool.category);
 
   return (
-    <Card
-      as="article"
-      aria-labelledby={`${tool.id}-title`}
-      className="relative flex h-full flex-col"
-    >
+    <Card as="article" aria-labelledby={titleId} className="relative flex h-full flex-col">
       <div className={cx('flex size-11 items-center justify-center rounded-control', tile)}>
         <Icon className="size-6" />
       </div>
-      <h3 id={`${tool.id}-title`} className="mt-4 text-lg font-semibold">
+      <h3 id={titleId} className="mt-4 text-lg font-semibold">
         <Link
           to={toolRoute(tool.slug)}
           className="static after:absolute after:inset-0 hover:underline"

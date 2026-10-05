@@ -1,17 +1,20 @@
 # Toolora
 
-Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grouped into categories —
-**Japan** (yen, era, age, postal-code and phone-number tools), **Student** (GPA, percentage/grade
-calculator, word counter, GPA ↔ percentage, date difference) and **Developer** (JSON formatter, Base64,
-UUID, Unix timestamp, regex tester, CSV ↔ JSON, JSON → TypeScript). All 17 tools run entirely in your
-browser, so your input is never sent anywhere.
+Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grouped into seven
+categories — **Japan** (era, age, consumption tax, kana and width, postal-code and phone-number tools),
+**Currency** (a currency converter on daily reference rates), **Student** (GPA, percentage/grade
+calculator, word counter, GPA ↔ percentage, date difference), **Developer** (JSON, Base64, URL and HTML
+entities, UUID, Unix timestamp, regex, CSV ↔ JSON, JSON → TypeScript, hash generator, JWT decoder),
+**Text** (case converter, Markdown preview, text diff), **Finance** (percentage, compound interest and
+loan payment calculators) and **Time** (time zone converter, business days). All 31 tools except the
+Currency Converter run entirely in your browser, so your input is never sent anywhere; the converter
+fetches daily reference rates for the base currency only and never sends the amount.
 
-> **Status: early development (Phase 7 of 11).** The repository has the monorepo, tooling, the design
-> system and app shell, a working API skeleton, real routing (`react-router-dom`), a tool registry, and
-> 17 tools — all working, tested and searchable/filterable at `/tools`, with related-tools
-> navigation on every tool page, and a client-side SEO foundation (canonical/Open Graph/Twitter tags,
-> JSON-LD, `sitemap.xml`, `robots.txt`). See the status table in [`CLAUDE.md`](./CLAUDE.md) and the
-> registry/routing details in [`docs/tools.md`](./docs/tools.md).
+> **Status.** Production runs Phase 21 (25 tools; commit `f618b3b`) on Vercel at
+> https://toolora-smoky.vercel.app. **Phase 23** (six new tools, header search, recently used tools,
+> favorites, richer category pages) is implemented but **not deployed**. There are no accounts (closed
+> via `ACCOUNTS_ENABLED`), payments, ads, analytics, PWA or AI features. See the status table in
+> [`CLAUDE.md`](./CLAUDE.md) and the registry/routing details in [`docs/tools.md`](./docs/tools.md).
 
 ## Architecture in brief
 
@@ -105,7 +108,8 @@ dependencies are loaded from `node_modules`).
 
 ## Deployment notes
 
-Nothing is deployed and no hosting has been chosen. Things a deployment will need:
+The live site is deployed on Vercel (see [`docs/deployment.md`](./docs/deployment.md)). The notes below
+apply to running the Express server yourself. Things a deployment will need:
 
 - Node ≥ 22.12. Build on the target (or in CI/a Docker build stage): `npm ci && npm run build`, then
   start from the repo root with `npm start` (paths such as the SQLite file are relative to the working
@@ -121,7 +125,7 @@ Nothing is deployed and no hosting has been chosen. Things a deployment will nee
   public origin (no trailing slash) **at build time** (the web bundle reads it) and at runtime (the server
   reads it) — canonical/OG/JSON-LD URLs and `sitemap.xml` need it; without it `sitemap.xml` returns 404.
 - `npm start` does **not** set `NODE_ENV`; without it the server runs in development mode (debug logs, not JSON). Set `NODE_ENV=production` in the environment.
-- Behind a reverse proxy/CDN, terminate TLS there. `npm start` serves the built web app (`apps/web/dist`) itself, injecting per-route SEO tags; unknown routes return 404. The server does **not** compress responses: have the proxy/platform gzip or brotli them (the main JS is ~335 kB raw, ~105 kB gzip).
+- Behind a reverse proxy/CDN, terminate TLS there. `npm start` serves the built web app (`apps/web/dist`) itself, injecting per-route SEO tags; unknown routes return 404. The server does **not** compress responses: have the proxy/platform gzip or brotli them (the main JS is ~390 kB raw, ~121 kB gzip).
 - Health check: `GET /api/health` → 200 `{status:"ok",...}`, 503 if the SQLite file cannot be queried. It needs no auth and reveals no internals. SQLite holds the accounts and sessions, so it needs a persistent, writable volume.
 - HTTP behaviour (all in `apps/server`, tests in `tests/production.test.ts`): helmet headers incl. CSP (`script-src 'self'`), HSTS, `Permissions-Policy`; no CORS headers (same-origin only); `/assets/*` is `immutable` for a year, HTML is `no-cache`, `/api/*` is `no-store`; dotfiles, source and config files are never served, and `/api/*` or missing `*.ext` paths get a JSON 404, not the SPA shell.
 - Shutdown: SIGINT/SIGTERM stop accepting connections, close the database and exit (forced after 10 s).
