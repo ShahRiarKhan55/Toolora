@@ -7,6 +7,7 @@ import type { Config } from './config';
 import { createDatabase } from './db';
 import type { Database } from './db';
 import type { Logger } from './logger';
+import { createCurrencyService } from './services/currency/currencyService';
 
 /** The production wiring shared by the long-running server (index.ts) and the Vercel function
  *  (vercel.ts). `webDistDir` is used only if it holds a built index.html. */
@@ -21,6 +22,7 @@ export function createProductionApp(
     logger,
     db,
     accountsEnabled: ACCOUNTS_ENABLED,
+    currency: createCurrencyService(),
     secureCookies: config.nodeEnv === 'production',
     publicSiteOrigin: config.publicSiteOrigin,
     webDistDir: existsSync(join(webDistDir, 'index.html')) ? webDistDir : undefined,

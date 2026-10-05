@@ -13,6 +13,8 @@ import {
   categoryRoute,
   getToolBySlug,
   getToolsByCategory,
+  getToolVariantBySlug,
+  toolFromVariant,
   toolRoute,
 } from './tools';
 
@@ -158,6 +160,11 @@ export function resolveRouteMeta(
     if (isCategoryId(param)) return { meta: categoryMeta(param), status: 200 };
     const tool = getToolBySlug(param);
     if (tool) return { meta: toolPageMeta(tool, origin), status: 200 };
+    const variant = getToolVariantBySlug(param);
+    const base = variant && getToolBySlug(variant.toolId);
+    if (variant && base) {
+      return { meta: toolPageMeta(toolFromVariant(variant, base), origin), status: 200 };
+    }
   }
 
   return { meta: NOT_FOUND_META, status: 404 };

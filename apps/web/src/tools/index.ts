@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { content as japaneseYenConverterContent } from './japanese-yen-converter/content';
+import { content as currencyConverterContent } from './currency-converter/content';
 import { content as japaneseEraConverterContent } from './japanese-era-converter/content';
 import { content as japaneseAgeCalculatorContent } from './japanese-age-calculator/content';
 import { content as gpaCalculatorContent } from './gpa-calculator/content';
@@ -16,20 +16,21 @@ import { content as gpaPercentageConverterContent } from './gpa-percentage-conve
 import { content as dateDifferenceCalculatorContent } from './date-difference-calculator/content';
 import { content as japanesePostalCodeFormatterContent } from './japanese-postal-code-formatter/content';
 import { content as japanesePhoneNumberFormatterContent } from './japanese-phone-number-formatter/content';
-import type { ToolImplementation } from './types';
+import { variantContent } from './currency-converter/variantContent';
+import type { ToolContent, ToolImplementation } from './types';
 
 // The single map from a registry tool id to its lazy-loaded workspace component and its copy.
 // `logic.ts`/content are cheap and imported eagerly above; each `<Name>Tool>` component is behind
 // its own `import()`, so Vite gives it its own chunk — a tool's code only loads when its page does.
 // A test (registry.test.ts) enforces that this map's keys exactly match the shared registry's ids.
 export const TOOL_IMPLEMENTATIONS: Readonly<Record<string, ToolImplementation>> = {
-  'japanese-yen-converter': {
+  'currency-converter': {
     Component: lazy(() =>
-      import('./japanese-yen-converter/JapaneseYenConverterTool').then((m) => ({
-        default: m.JapaneseYenConverterTool,
+      import('./currency-converter/CurrencyConverterTool').then((m) => ({
+        default: m.CurrencyConverterTool,
       })),
     ),
-    content: japaneseYenConverterContent,
+    content: currencyConverterContent,
   },
   'japanese-era-converter': {
     Component: lazy(() =>
@@ -150,3 +151,6 @@ export const TOOL_IMPLEMENTATIONS: Readonly<Record<string, ToolImplementation>> 
     content: japanesePhoneNumberFormatterContent,
   },
 };
+
+/** Copy for each `TOOL_VARIANTS` page, by slug (checked against the registry in registry.test.ts). */
+export const TOOL_VARIANT_CONTENT: Readonly<Record<string, ToolContent>> = variantContent;

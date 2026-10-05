@@ -6,6 +6,9 @@ import {
   categoryRoute,
   getPopulatedCategories,
   getToolBySlug,
+  getToolVariantBySlug,
+  TOOL_VARIANTS,
+  toolFromVariant,
   getToolsByCategory,
   TOOL_ICON_IDS,
   toolRoute,
@@ -113,9 +116,9 @@ describe('TOOLS registry', () => {
     expect(new Set(seoDescriptions).size).toBe(seoDescriptions.length);
   });
 
-  it('marks every MVP tool as running locally in the browser', () => {
+  it('marks every tool as running locally in the browser, except the rate-backed converter', () => {
     for (const tool of TOOLS) {
-      expect(tool.localOnly).toBe(true);
+      expect(tool.localOnly, tool.id).toBe(tool.id !== 'currency-converter');
     }
   });
 
@@ -188,5 +191,41 @@ describe('getToolsByCategory', () => {
   it('together with every other category, accounts for every tool exactly once', () => {
     const total = CATEGORY_IDS.reduce((sum, id) => sum + getToolsByCategory(id).length, 0);
     expect(total).toBe(TOOLS.length);
+  });
+
+  describe('TOOL_VARIANTS', () => {
+    it('points every variant at a real tool, with unique kebab-case slugs', () => {
+      const slugs = TOOL_VARIANTS.map((v) => v.slug);
+      expect(new Set(slugs).size).toBe(slugs.length);
+      for (const variant of TOOL_VARIANTS) {
+        expect(getToolBySlug(variant.toolId), variant.slug).toBeDefined();
+        expect(variant.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+      }
+    });
+
+    it('never collides with a tool slug or a category id', () => {
+      for (const variant of TOOL_VARIANTS) {
+        expect(getToolBySlug(variant.slug), variant.slug).toBeUndefined();
+        expect(CATEGORY_IDS as readonly string[]).not.toContain(variant.slug);
+      }
+    });
+
+    it('has SEO text distinct from every tool and every other variant', () => {
+      const all = [...TOOLS, ...TOOL_VARIANTS];
+      expect(new Set(all.map((t) => t.seoTitle)).size).toBe(all.length);
+      expect(new Set(all.map((t) => t.seoDescription)).size).toBe(all.length);
+    });
+
+    it('describes a variant as its tool with the variant slug and text', () => {
+      const variant = getToolVariantBySlug('jpy-to-bdt')!;
+      const meta = toolFromVariant(variant, getToolBySlug(variant.toolId)!);
+      expect(meta.slug).toBe('jpy-to-bdt');
+      expect(meta.seoTitle).toBe(variant.seoTitle);
+      expect(meta.id).toBe('currency-converter');
+    });
+
+    it('presets use two different currencies', () => {
+      for (const { preset } of TOOL_VARIANTS) expect(preset.from).not.toBe(preset.to);
+    });
   });
 });

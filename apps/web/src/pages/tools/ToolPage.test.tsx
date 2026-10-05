@@ -1,4 +1,4 @@
-import { getToolBySlug, toolRoute } from '@toolora/shared';
+import { getToolBySlug, getToolVariantBySlug, TOOL_VARIANTS, toolRoute } from '@toolora/shared';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
@@ -57,5 +57,47 @@ describe('ToolPage', () => {
       'href',
       toolRoute(tool.slug),
     );
+  });
+});
+
+describe('ToolPage variants', () => {
+  function renderVariant(slug: string) {
+    const variant = getToolVariantBySlug(slug)!;
+    return render(
+      <MemoryRouter>
+        <ToolPage tool={getToolBySlug(variant.toolId)!} variant={variant} />
+      </MemoryRouter>,
+    );
+  }
+
+  it.each(TOOL_VARIANTS)('$slug: own h1, title, canonical and a link to the general tool', (v) => {
+    renderVariant(v.slug);
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: v.name })).toBeInTheDocument();
+    expect(document.title).toBe(v.seoTitle);
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      toolRoute(v.slug),
+    );
+    const crumbs = within(screen.getByRole('navigation', { name: 'Breadcrumb' }));
+    expect(crumbs.getByRole('link', { name: 'Currency Converter' })).toHaveAttribute(
+      'href',
+      '/tools/currency-converter',
+    );
+    const related = within(
+      screen.getByRole('heading', { name: 'Related tools' }).closest('section')!,
+    );
+    expect(related.getAllByRole('link')[0]).toHaveAttribute('href', '/tools/currency-converter');
+  });
+
+  it('renders the converter preset for the pair', async () => {
+    renderVariant('bdt-to-jpy');
+    expect(await screen.findByLabelText('From')).toHaveValue('BDT');
+    expect(screen.getByLabelText('To')).toHaveValue('JPY');
+  });
+
+  it('shows the variant explanation, not the general copy', () => {
+    renderVariant('jpy-to-bdt');
+    expect(screen.getByText(/illustrative rate/)).toBeInTheDocument();
   });
 });

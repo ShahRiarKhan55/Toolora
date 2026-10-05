@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { resolveRouteMeta } from '@toolora/shared';
+import { LEGACY_TOOL_REDIRECTS, resolveRouteMeta } from '@toolora/shared';
 import express, { Router } from 'express';
 import { hasSeoRegion, injectSeoHead, renderSeoHead } from '../seoHead';
 
@@ -23,6 +23,19 @@ export function spaRouter({
   }
 
   const router = Router();
+  // Retired tool URLs: 301 to the replacement, keeping any query string. Before static/SPA handling,
+  // so the old path is never served as a page.
+  router.get(/^\/tools\/[^/]+\/?$/, (req, res, next) => {
+    const target = LEGACY_TOOL_REDIRECTS[req.path.replace(/\/$/, '')];
+    if (target === undefined) {
+      next();
+      return;
+    }
+    const query = req.originalUrl.includes('?')
+      ? req.originalUrl.slice(req.originalUrl.indexOf('?'))
+      : '';
+    res.redirect(301, target + query);
+  });
   // The template itself carries no route tags; only the injected responses below may be served as HTML.
   router.get('/index.html', (_req, _res, next) => next('router'));
   // Vite fingerprints everything in /assets, so those files never change under the same name.

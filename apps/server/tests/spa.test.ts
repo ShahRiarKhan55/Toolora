@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { getIndexableRoutes, TOOLS } from '@toolora/shared';
+import { getIndexableRoutes, TOOL_VARIANTS, TOOLS } from '@toolora/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app';
@@ -155,13 +155,38 @@ describe('server-rendered SEO head', () => {
   });
 
   it('without a public origin: relative canonical, no JSON-LD', async () => {
-    const res = await request(app(null)).get('/tools/japanese-yen-converter');
-    expect(res.text).toContain('<link rel="canonical" href="/tools/japanese-yen-converter" />');
+    const res = await request(app(null)).get('/tools/currency-converter');
+    expect(res.text).toContain('<link rel="canonical" href="/tools/currency-converter" />');
     expect(res.text).not.toContain('ld+json');
   });
 
+  it.each(TOOL_VARIANTS)(
+    'variant /tools/$slug: own title, canonical and WebApplication JSON-LD',
+    async (v) => {
+      const res = await request(app()).get(`/tools/${v.slug}`);
+      expect(res.status).toBe(200);
+      expect(res.text).toContain(`<title>${v.seoTitle}</title>`);
+      expect(res.text).toContain(`<link rel="canonical" href="${ORIGIN}/tools/${v.slug}" />`);
+      expect(res.text).toContain('<meta name="robots" content="index,follow" />');
+      expect(res.text).toContain('"@type":"WebApplication"');
+      expect(res.text).toContain(`"url":"${ORIGIN}/tools/${v.slug}"`);
+      expect(res.text).not.toContain('dev default');
+    },
+  );
+
+  it('keeps the general converter, JPY→BDT and BDT→JPY on distinct canonicals', async () => {
+    const slugs = ['currency-converter', 'jpy-to-bdt', 'bdt-to-jpy'];
+    const canonicals = await Promise.all(
+      slugs.map(async (slug) => {
+        const res = await request(app()).get(`/tools/${slug}`);
+        return /rel="canonical" href="([^"]+)"/.exec(res.text)?.[1];
+      }),
+    );
+    expect(new Set(canonicals).size).toBe(3);
+  });
+
   it('emits exactly one of each head tag', async () => {
-    const res = await request(app()).get('/tools/japanese-yen-converter');
+    const res = await request(app()).get('/tools/currency-converter');
     for (const pattern of [
       /<title>/g,
       /name="description"/g,
@@ -184,6 +209,41 @@ describe('server-rendered SEO head', () => {
     const api = await request(app()).get('/api/nope');
     expect(api.status).toBe(404);
     expect(api.headers['content-type']).toMatch(/json/);
+  });
+});
+
+describe('retired tool URLs', () => {
+  it.each(['/tools/japanese-yen-converter', '/tools/japanese-yen-converter/'])(
+    '%s permanently redirects to the Currency Converter',
+    async (path) => {
+      const res = await request(app()).get(path);
+      expect(res.status).toBe(301);
+      expect(res.headers['location']).toBe('/tools/currency-converter');
+      expect(res.text).not.toContain('<title>');
+    },
+  );
+
+  it('keeps the query string and also redirects HEAD', async () => {
+    const res = await request(app()).get('/tools/japanese-yen-converter?utm=x');
+    expect(res.headers['location']).toBe('/tools/currency-converter?utm=x');
+    expect((await request(app()).head('/tools/japanese-yen-converter')).status).toBe(301);
+  });
+
+  it('is not in the sitemap, and the new target is a normal indexable page', async () => {
+    const sitemap = (await request(app()).get('/sitemap.xml')).text;
+    expect(sitemap).not.toContain('japanese-yen-converter');
+    expect(sitemap).toContain('/tools/currency-converter<');
+    const target = await request(app()).get('/tools/currency-converter');
+    expect(target.status).toBe(200);
+    expect(target.text).toContain(`href="${ORIGIN}/tools/currency-converter"`);
+  });
+
+  it('leaves unknown tool paths as 404 and other paths untouched', async () => {
+    const unknown = await request(app()).get('/tools/japanese-yen-converterx');
+    expect(unknown.status).toBe(404);
+    expect(unknown.text).toContain('noindex');
+    expect((await request(app()).get('/tools/jpy-to-bdt')).status).toBe(200);
+    expect((await request(app()).post('/tools/japanese-yen-converter')).status).not.toBe(301);
   });
 });
 

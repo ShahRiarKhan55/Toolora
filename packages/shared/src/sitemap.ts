@@ -3,7 +3,14 @@
 // against fake functionality" and docs/tools.md).
 
 import { CONTACT_ROUTE, HOME_ROUTE, PRIVACY_ROUTE } from './site';
-import { ALL_TOOLS_ROUTE, categoryRoute, getPopulatedCategories, TOOLS, toolRoute } from './tools';
+import {
+  ALL_TOOLS_ROUTE,
+  categoryRoute,
+  getPopulatedCategories,
+  TOOL_VARIANTS,
+  TOOLS,
+  toolRoute,
+} from './tools';
 import { absoluteUrl } from './url';
 
 export interface SitemapRoute {
@@ -19,7 +26,7 @@ export function getIndexableRoutes(): readonly SitemapRoute[] {
   const categoryRoutes = getPopulatedCategories().map((category) => ({
     path: categoryRoute(category.id),
   }));
-  const toolRoutes = TOOLS.map((tool) => ({ path: toolRoute(tool.slug) }));
+  const toolRoutes = [...TOOLS, ...TOOL_VARIANTS].map((tool) => ({ path: toolRoute(tool.slug) }));
 
   return [
     { path: HOME_ROUTE },

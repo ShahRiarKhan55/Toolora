@@ -212,6 +212,42 @@ Express (TLS and compression belong to the proxy/platform; adding `compression` 
 without one). Dotfiles are ignored by `express.static`; paths ending in an extension never fall back to HTML. Tests:
 `apps/server/tests/production.test.ts`.
 
+### 6c. Dynamic data: live currency rates _(Phase 18)_
+
+Browser → `GET /api/currency/rates` (`routes/currency.ts`) → `services/currency/currencyService.ts` → provider adapter →
+external provider. The browser never calls a provider; the URLs are fixed in the adapters and built only from a whitelisted
+currency code (`CURRENCY_CODES`, `packages/shared/src/currency.ts`), so there is no proxy and no SSRF surface. No database,
+no accounts, no new environment variables, no secrets: neither provider needs a key.
+
+- **Endpoint:** `GET /api/currency/rates?base=JPY&symbols=BDT,USD` (`symbols` optional = all 16 supported; case-insensitive;
+  max 16, no duplicates; any other parameter is a 400). Success: `{ base, rates, updatedAt, source, cached }` with
+  `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=600`. Errors are the standard
+  `{ error: { code, message } }` with `no-store`: `missing_parameter`, `invalid_parameter`, `invalid_currency`,
+  `duplicate_symbols`, `too_many_symbols` (400); `method_not_allowed` (405, `Allow: GET, HEAD`); `rate_limited` (429,
+  `Retry-After`); `upstream_unavailable` (502); `upstream_timeout` (504, only when every provider timed out).
+- **Providers** (`services/currency/providers/`), tried in order, first success wins: (1) `exchangerate-api` - open.er-api.com
+  open-access endpoint, no key, includes BDT and JPY, **updated once a day** (terms require attribution to
+  exchangerate-api.com; add the link when the UI ships); (2) `fawazahmed0` - the `@fawazahmed0/currency-api` JSON on the
+  jsDelivr CDN, no key, daily, date-only timestamp. Both are reference rates, **not real-time or tradable**; UI copy must say
+  "daily reference rates" with the `updatedAt`. Free public endpoints have no SLA; either can change or disappear.
+  Each adapter validates the response with zod and requires a positive finite rate for every supported currency, otherwise it
+  is `malformed`. 4 s timeout per provider call, redirects refused.
+- **Replace a provider / add one:** implement `RateProvider` (`latest(base) → RateTable`) using `getJson` + `buildTable`, and
+  list it in `createCurrencyService`'s default `providers`. A keyed provider reads its key from `process.env` in
+  `config.ts` (zod) and is passed in from `productionApp.ts`; never `VITE_*`, never logged. Historical rates are not
+  implemented (the interface has no such method yet; add it with the first provider that supports it).
+- **Another dynamic-data domain:** a new folder under `services/<domain>/` with its own types, providers and service, reusing
+  `TtlCache`, `rateLimit` and `HttpError`, mounted in `app.ts` behind an optional dependency like `currency`.
+- **Cache** (`services/cache.ts`): 1 h TTL per base currency, at most 64 entries, concurrent misses share one upstream call,
+  failures are not cached. It is in memory, so on Vercel it only lives as long as a warm function instance and each instance
+  has its own; the `s-maxage` header lets Vercel's CDN absorb most repeats. Treat both as best-effort.
+- **Rate limit** (`middleware/rateLimit.ts`): 60 requests/min per `req.ip` on `/api/currency` only (tools and other routes are
+  unaffected). Per-process fixed window with a bounded client map: it stops accidental hammering, **not** a distributed or
+  determined abuser (each serverless instance counts separately, cold starts reset it). `vercel.ts` sets `trust proxy 1` so
+  the key is the real client address; behind any other proxy set the same, otherwise all clients share the proxy's address.
+  A shared store (Redis etc.) is the later upgrade; the middleware is the seam.
+- Tests: `services/currency/currencyService.test.ts`, `middleware/rateLimit.test.ts`, `tests/currency.test.ts`.
+
 ### 6b. Accounts and entitlements _(Phase 11 boundary, Phase 12 real authentication)_
 
 > **Closed at launch (Phase 15).** `ACCOUNTS_ENABLED` is `false`: the API below is not mounted (404), the UI entry
@@ -402,3 +438,16 @@ typically 1–5 kB gzip per tool); no UI kit; Tailwind emits only used classes; 
 requests; all tool work is local computation. Current baseline (Phase 3): main web JS ≈ 96 kB gzip
 (React 19 + React Router + the app shell + registry), CSS ≈ 5 kB gzip, server bundle ≈ 9 kB (plus
 external dependencies).
+
+#### Currency Converter UI _(Phase 19)_
+
+`apps/web/src/tools/currency-converter/`: `api.ts` (the only network code: `GET /api/currency/rates?base=XXX`, 10 s timeout,
+validates the body, maps failures to `timeout | rate-limited | unavailable | malformed | unsupported`; server messages are
+never shown), `logic.ts` (amount parsing, formatting, sources, copy text, popular pairs; pure and tested),
+`CurrencyConverterTool.tsx`. One request per _base_ currency, kept in component state, so changing the target currency, the
+amount or revisiting a base costs nothing; there is no polling and no automatic retry (a "Try again" button appears only
+after a failure). The result shows the rate, its date (`updatedAt`, UTC), the source and whether Toolora's server answered
+from its cache (the rate date is unaffected). ExchangeRate-API's attribution link is always visible; when the fallback
+supplied the rate the UI names it instead and mentions the primary. Display metadata (name, symbol) is in
+`CURRENCY_INFO` (shared); there are deliberately no flags (EUR spans countries; Windows renders no flag emoji). The picker
+is a native `<select>` (type-ahead by code, best mobile/a11y behaviour). Variant pages: see `docs/tools.md`.

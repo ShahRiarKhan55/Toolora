@@ -119,7 +119,7 @@ describe('getRelatedTools', () => {
   });
 
   it('defaults to a limit of 3 for the real registry', () => {
-    const current = TOOLS.find((t) => t.id === 'japanese-yen-converter')!;
+    const current = TOOLS.find((t) => t.id === 'currency-converter')!;
     expect(getRelatedTools(TOOLS, current)).toHaveLength(3);
   });
 });

@@ -12,4 +12,9 @@ const config = loadConfig();
 const logger = createLogger({ level: config.logLevel, json: config.nodeEnv === 'production' });
 const webDistDir = resolve(fileURLToPath(import.meta.url), '../../../web/dist');
 
-export default createProductionApp(config, logger, webDistDir).app;
+const { app } = createProductionApp(config, logger, webDistDir);
+// Behind Vercel's proxy the client address is the last X-Forwarded-For entry it appended; the
+// /api/currency rate limiter keys on req.ip.
+app.set('trust proxy', 1);
+
+export default app;

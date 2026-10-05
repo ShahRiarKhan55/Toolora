@@ -42,6 +42,15 @@ describe('App routing', () => {
     ).toBeInTheDocument();
   });
 
+  it.each([
+    ['/tools/jpy-to-bdt', 'JPY to BDT Converter'],
+    ['/tools/bdt-to-jpy', 'BDT to JPY Converter'],
+    ['/tools/currency-converter', 'Currency Converter'],
+  ])('renders the currency page at %s', (path, name) => {
+    renderAt(path);
+    expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
+  });
+
   it('renders a 404 page for an unknown category-shaped path', () => {
     renderAt('/tools/not-a-real-tool-or-category');
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();

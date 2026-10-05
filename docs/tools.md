@@ -7,7 +7,7 @@ the day-to-day rules this implements, and `docs/architecture.md` for the reasoni
 
 | Category  | Tool (route `/tools/<slug>`)                                                                                                                         |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Japan     | `japanese-yen-converter`, `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`   |
+| Japan     | `currency-converter`, `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`       |
 | Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                            |
 | Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript` |
 
@@ -106,6 +106,18 @@ looks up a tool's implementation and renders it inside `ToolPageLayout`, wrapped
 implementation exists with no registry entry. `packages/shared/src/tools.test.ts` enforces unique ids,
 slugs, routes, names, descriptions, SEO titles/descriptions and a globally unique `order` (so listing
 order never depends on array position), plus valid categories and icons.
+
+## Variant pages _(Phase 19)_
+
+`TOOL_VARIANTS` (shared) lists SEO landing pages that are an existing tool opened with a preset, e.g.
+`/tools/jpy-to-bdt` → `currency-converter` with `{ from: 'JPY', to: 'BDT' }`. A variant has its own slug (same flat
+namespace as tools and categories), SEO text and copy (`TOOL_VARIANT_CONTENT`), is in the sitemap and
+`resolveRouteMeta`, but is not a card, not searchable and not a second implementation. The tool's component
+receives the preset as its `preset` prop. Add a pair by adding one `TOOL_VARIANTS` entry and its copy.
+
+**Retired URLs:** `LEGACY_TOOL_REDIRECTS` (shared) maps a removed tool route to its replacement
+(`/tools/japanese-yen-converter` → `/tools/currency-converter`); `routes/spa.ts` answers it with a 301 (query string kept)
+before any page handling. They are not in the registry or sitemap. Production/Vercel only (Express serves every page route).
 
 ## Adding a tool
 

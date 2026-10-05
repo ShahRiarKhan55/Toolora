@@ -1,5 +1,6 @@
 export * from './access';
 export * from './categories';
+export * from './currency';
 export * from './pageMeta';
 export * from './site';
 export * from './sitemap';

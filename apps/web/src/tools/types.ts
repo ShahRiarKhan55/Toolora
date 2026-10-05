@@ -1,3 +1,4 @@
+import type { ToolPreset } from '@toolora/shared';
 import type { ComponentType, ReactNode } from 'react';
 import type { FaqItem } from '../components/layout/ToolPageLayout';
 
@@ -10,6 +11,7 @@ export interface ToolContent {
 
 /** One entry in the tool implementation map: the lazy-loaded workspace plus its copy. */
 export interface ToolImplementation {
-  Component: ComponentType;
+  /** `preset` is only passed on a variant page (e.g. /tools/jpy-to-bdt); tools that have none ignore it. */
+  Component: ComponentType<{ preset?: ToolPreset }>;
   content: ToolContent;
 }

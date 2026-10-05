@@ -1,6 +1,7 @@
 import type { AccessLevel } from './access';
 import { CATEGORIES } from './categories';
 import type { Category, CategoryId } from './categories';
+import type { CurrencyCode } from './currency';
 
 // The tool icon identifiers a ToolMeta can reference. Kept here (not in `apps/web`) so the registry
 // stays the single source of truth; `apps/web/src/config/toolPresentation.ts` maps each id to a real
@@ -63,22 +64,37 @@ export interface ToolMeta {
 // these, or if a component exists with no matching entry.
 export const TOOLS: readonly ToolMeta[] = [
   {
-    id: 'japanese-yen-converter',
-    slug: 'japanese-yen-converter',
-    name: 'Japanese Yen Converter',
-    description: 'Convert Japanese yen to other currencies using reference rates you can edit.',
+    id: 'currency-converter',
+    slug: 'currency-converter',
+    name: 'Currency Converter',
+    description:
+      'Convert JPY, BDT, USD, EUR and 12 more currencies using daily reference exchange rates.',
     category: 'japan',
     icon: 'yen',
-    keywords: ['yen', 'jpy', 'currency', 'convert', 'exchange rate', 'japan money', 'forex'],
-    seoTitle: 'Japanese Yen Converter — Toolora',
+    keywords: [
+      'currency',
+      'converter',
+      'exchange rate',
+      'jpy',
+      'yen',
+      'bdt',
+      'taka',
+      'jpy to bdt',
+      'bdt to jpy',
+      'usd',
+      'forex',
+      'japan money',
+    ],
+    seoTitle: 'Currency Converter — JPY, BDT & More Exchange Rates — Toolora',
     seoDescription:
-      'Convert Japanese yen (JPY) to USD, EUR, GBP and more with editable reference rates. Not live market rates. Runs in your browser.',
-    localOnly: true,
+      'Free currency converter for JPY, BDT, USD, EUR, GBP and more, using daily reference exchange rates with the rate date shown. Not a bank or transfer rate.',
+    // Rates come from Toolora's own /api/currency; the amount you type never leaves the browser.
+    localOnly: false,
     order: 1,
     related: [
-      'percentage-grade-calculator',
       'japanese-era-converter',
       'japanese-postal-code-formatter',
+      'percentage-grade-calculator',
     ],
   },
   {
@@ -104,7 +120,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Convert Gregorian dates to Japanese era notation (Meiji, Taisho, Showa, Heisei, Reiwa) and back, with valid-range checks.',
     localOnly: true,
     order: 2,
-    related: ['japanese-age-calculator', 'date-difference-calculator', 'japanese-yen-converter'],
+    related: ['japanese-age-calculator', 'date-difference-calculator', 'currency-converter'],
   },
   {
     id: 'japanese-age-calculator',
@@ -156,7 +172,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Calculate percentage from marks, marks from a percentage, percentage change, and a letter grade on a default scale.',
     localOnly: true,
     order: 5,
-    related: ['gpa-percentage-converter', 'gpa-calculator', 'japanese-yen-converter'],
+    related: ['gpa-percentage-converter', 'gpa-calculator', 'currency-converter'],
   },
   {
     id: 'word-counter',
@@ -323,7 +339,7 @@ export const TOOLS: readonly ToolMeta[] = [
       'Format a Japanese postal code as XXX-XXXX from 7 digits, with or without a hyphen. Checks the format only; it does not look up addresses.',
     localOnly: true,
     order: 16,
-    related: ['japanese-phone-number-formatter', 'japanese-yen-converter'],
+    related: ['japanese-phone-number-formatter', 'currency-converter'],
   },
   {
     id: 'japanese-phone-number-formatter',
@@ -367,3 +383,69 @@ export function getToolsByCategory(category: CategoryId): ToolMeta[] {
 export function getPopulatedCategories(): Category[] {
   return CATEGORIES.filter((category) => getToolsByCategory(category.id).length > 0);
 }
+
+/** Initial state a variant page hands to its tool's workspace. Only currency pairs exist so far. */
+export interface ToolPreset {
+  from: CurrencyCode;
+  to: CurrencyCode;
+}
+
+/**
+ * An SEO landing page that is the same tool opened with a preset (`/tools/jpy-to-bdt`): no second
+ * implementation and no tool card of its own, only a route, metadata and a preset. Its copy lives in
+ * `apps/web/src/tools/currency-converter/variantContent.tsx`, keyed by slug.
+ */
+export interface ToolVariant {
+  /** Same flat namespace as tool slugs and category ids; a test keeps them distinct. */
+  slug: string;
+  /** Id of the tool in `TOOLS` that renders this page. */
+  toolId: string;
+  name: string;
+  description: string;
+  seoTitle: string;
+  seoDescription: string;
+  preset: ToolPreset;
+}
+
+export const TOOL_VARIANTS: readonly ToolVariant[] = [
+  {
+    slug: 'jpy-to-bdt',
+    toolId: 'currency-converter',
+    name: 'JPY to BDT Converter',
+    description:
+      'Convert Japanese yen to Bangladeshi taka using the daily reference exchange rate.',
+    seoTitle: 'JPY to BDT Converter — Japanese Yen to Taka Rate — Toolora',
+    seoDescription:
+      'Convert Japanese yen (JPY) to Bangladeshi taka (BDT) with the daily reference exchange rate and its date. Bank and remittance rates differ.',
+    preset: { from: 'JPY', to: 'BDT' },
+  },
+  {
+    slug: 'bdt-to-jpy',
+    toolId: 'currency-converter',
+    name: 'BDT to JPY Converter',
+    description:
+      'Convert Bangladeshi taka to Japanese yen using the daily reference exchange rate.',
+    seoTitle: 'BDT to JPY Converter — Taka to Japanese Yen Rate — Toolora',
+    seoDescription:
+      'Convert Bangladeshi taka (BDT) to Japanese yen (JPY) with the daily reference exchange rate and its date. Bank and remittance rates differ.',
+    preset: { from: 'BDT', to: 'JPY' },
+  },
+];
+
+export function getToolVariantBySlug(slug: string): ToolVariant | undefined {
+  return TOOL_VARIANTS.find((variant) => variant.slug === slug);
+}
+
+/** A variant described as the `ToolMeta` its page metadata (title, canonical, JSON-LD) is built from. */
+export function toolFromVariant(variant: ToolVariant, tool: ToolMeta): ToolMeta {
+  const { slug, name, description, seoTitle, seoDescription } = variant;
+  return { ...tool, slug, name, description, seoTitle, seoDescription };
+}
+
+/**
+ * Routes that used to be tools and now live elsewhere. The server answers each with a permanent
+ * redirect (`routes/spa.ts`); they are never in the sitemap, the registry or the web router.
+ */
+export const LEGACY_TOOL_REDIRECTS: Readonly<Record<string, string>> = {
+  [toolRoute('japanese-yen-converter')]: toolRoute('currency-converter'),
+};

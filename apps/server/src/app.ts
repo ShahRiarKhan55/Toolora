@@ -7,9 +7,11 @@ import type { Logger } from './logger';
 import { errorHandler, routeNotFound } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { authRouter } from './routes/auth';
+import { currencyRouter } from './routes/currency';
 import { healthRouter } from './routes/health';
 import { seoRouter } from './routes/seo';
 import { spaRouter } from './routes/spa';
+import type { CurrencyService } from './services/currency/currencyService';
 
 export interface AppDeps {
   logger: Logger;
@@ -25,6 +27,8 @@ export interface AppDeps {
   /** Mount `/api/auth`. The production entry point passes ACCOUNTS_ENABLED (false at launch); when
    *  off, those paths are plain JSON 404s. Defaults to true so the auth tests exercise the API. */
   accountsEnabled?: boolean;
+  /** Live exchange-rate service behind `/api/currency`. Omit to leave those paths unmounted (404). */
+  currency?: CurrencyService;
 }
 
 /** Builds the Express app without listening, so tests can drive it directly with supertest. */
@@ -35,6 +39,7 @@ export function createApp({
   publicSiteOrigin,
   webDistDir,
   accountsEnabled = true,
+  currency,
 }: AppDeps): Express {
   const app = express();
 
@@ -54,6 +59,7 @@ export function createApp({
     next();
   });
   app.use('/api', healthRouter({ db, logger, checkDatabase: accountsEnabled }));
+  if (currency) app.use('/api/currency', currencyRouter({ currency }));
   if (accountsEnabled) {
     app.use('/api/auth', authRouter({ auth: createAuth({ prisma: db.prisma, secureCookies }) }));
   }

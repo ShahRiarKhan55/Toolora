@@ -15,23 +15,25 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 
 ## Status
 
-| Phase | Scope                                                                                 | State |
-| ----- | ------------------------------------------------------------------------------------- | ----- |
-| 0–1   | Analysis, monorepo, tooling, server skeleton                                          | done  |
-| 2     | Design system + app shell                                                             | done  |
-| 3     | Tool registry, routing, first 10 tools, client-side search                            | done  |
-| 4     | Product quality: related tools, category filter/discovery, content/a11y pass          | done  |
-| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots            | done  |
-| 6     | Production readiness: route focus/scroll, error boundary, target sizes                | done  |
-| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone) | done  |
-| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)              | done  |
-| 9     | Discovery: curated `related` links, populated-only category links, concise home       | done  |
-| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests   | done  |
-| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)  | done  |
-| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)         | done  |
-| 13    | Full test pass, lint/build, UX/a11y/perf review                                       | done  |
-| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)  | done  |
-| 17    | Vercel deployment preparation (stateless Express function; not yet deployed)          | done  |
+| Phase | Scope                                                                                    | State |
+| ----- | ---------------------------------------------------------------------------------------- | ----- |
+| 0–1   | Analysis, monorepo, tooling, server skeleton                                             | done  |
+| 2     | Design system + app shell                                                                | done  |
+| 3     | Tool registry, routing, first 10 tools, client-side search                               | done  |
+| 4     | Product quality: related tools, category filter/discovery, content/a11y pass             | done  |
+| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots               | done  |
+| 6     | Production readiness: route focus/scroll, error boundary, target sizes                   | done  |
+| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone)    | done  |
+| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)                 | done  |
+| 9     | Discovery: curated `related` links, populated-only category links, concise home          | done  |
+| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests      | done  |
+| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)     | done  |
+| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)            | done  |
+| 13    | Full test pass, lint/build, UX/a11y/perf review                                          | done  |
+| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)     | done  |
+| 17    | Vercel deployment preparation (stateless Express function; not yet deployed)             | done  |
+| 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit     | done  |
+| 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy` | done  |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -133,7 +135,7 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 - Tool **metadata** lives in one registry, `TOOLS` in `packages/shared/src/tools.ts` (id, slug, name,
   description, category, icon identifier, keywords, seoTitle, seoDescription, localOnly, order). The
   route is derived — **`/tools/<slug>`, flat, not nested under its category** (`/tools/japan` is the
-  _category_ page; a tool's own route is a sibling, e.g. `/tools/japanese-yen-converter`) — never
+  _category_ page; a tool's own route is a sibling, e.g. `/tools/japanese-era-converter`) — never
   stored twice. Homepage cards, category pages, search and per-route document title/description are
   all generated from it; the sitemap/robots and server-injected tags are generated from it too. Nothing hard-codes a
   tool list.
@@ -158,8 +160,8 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 - Every shipped tool and control must really work. No placeholder pages presented as working, no
   disabled "coming soon" tools in the registry, no hard-coded demo output.
 - No fake analytics, user counts, testimonials, reviews, "trusted by" claims, or made-up statistics.
-- Anything that is not live must say so in the UI (e.g. the yen converter's exchange rates are
-  user-editable and **not** real-time until a real provider is added — and adding one needs approval).
+- Anything that is not live must say so in the UI (e.g. the Currency Converter shows **daily reference
+  rates** with their date and source; never call them live, real-time or transaction rates).
 - Do not describe unbuilt features as existing in docs, UI copy or commit messages.
 
 ## Privacy principles
@@ -205,6 +207,20 @@ Full detail and the "adding a tool" walkthrough live in `docs/tools.md`; the sho
 cross-origin client). Caching: `/assets/*` immutable 1 y, HTML `no-cache`, `/api/*` `no-store`. Responses are not compressed by
 Express - the proxy/platform must do it. `/api/health` pings SQLite (the DB holds the accounts: run `npm run db:deploy` first).
 Payments will need a real DB strategy and are deferred. Vercel (Phase 17, `vercel.json`, `server.mjs`, `docs/deployment.md`): stateless while accounts are closed — `/api/health` skips the DB ping then; accounts must not be enabled on Vercel without a persistent database. Regression tests: `apps/server/tests/production.test.ts`.
+
+## Dynamic data (Phase 18)
+
+Live data goes browser → `/api/<domain>` → `apps/server/src/services/<domain>` → provider adapter; the browser never calls
+providers, no generic proxy endpoints, no keys in `VITE_*`. Currency is the first domain (keyless providers, daily
+reference rates - never call them real-time). Cache and rate limiter are in-memory and best-effort on Vercel. Details:
+`docs/architecture.md` 6c.
+
+**Currency Converter (Phase 19)** is the one tool that is not `localOnly`: it loads rates for the _base currency only_
+from `/api/currency/rates` (the amount never leaves the browser). Variant pages (`TOOL_VARIANTS` in
+`packages/shared/src/tools.ts`: `/tools/jpy-to-bdt`, `/tools/bdt-to-jpy`) are the same tool opened with a preset: own
+route, SEO metadata and copy (`tools/currency-converter/variantContent.tsx`), no second implementation, no tool card.
+Keep the ExchangeRate-API attribution link visible, credit the fallback provider truthfully, and never put a rate in
+static copy. Historical charts are deferred (Phase 20).
 
 ## Accounts and entitlements (Phase 11 boundary, Phase 12 authentication)
 
