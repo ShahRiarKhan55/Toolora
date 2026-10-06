@@ -3,17 +3,17 @@
 How the tool registry and routing work, and the exact steps to add a new tool. See `CLAUDE.md` for
 the day-to-day rules this implements, and `docs/architecture.md` for the reasoning behind it.
 
-## Current catalog (31 tools)
+## Current catalog (34 tools)
 
-| Category  | Tool (route `/tools/<slug>`)                                                                                                                                                                                                                   |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Japan     | `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`, `japanese-consumption-tax-calculator`, `kana-width-converter` (the Currency Converter moved to Currency in Phase 20) |
-| Currency  | `currency-converter`                                                                                                                                                                                                                           |
-| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                                                                                                                      |
-| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript`, `url-encoder-decoder`, `html-entity-encoder-decoder`, `hash-generator`, `jwt-decoder`    |
-| Text      | `text-case-converter`, `markdown-preview`, `text-diff-checker`                                                                                                                                                                                 |
-| Finance   | `compound-interest-calculator`, `loan-payment-calculator`, `percentage-calculator`                                                                                                                                                             |
-| Time      | `time-zone-converter`, `business-days-calculator`                                                                                                                                                                                              |
+| Category  | Tool (route `/tools/<slug>`)                                                                                                                                                                                                                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Japan     | `japanese-era-converter`, `japanese-age-calculator`, `japanese-postal-code-formatter`, `japanese-phone-number-formatter`, `japanese-consumption-tax-calculator`, `kana-width-converter`, `japan-take-home-pay-calculator`, `japan-student-work-limit-checker`, `japan-furusato-nozei-limit-estimator` (the Currency Converter moved to Currency in Phase 20) |
+| Currency  | `currency-converter`                                                                                                                                                                                                                                                                                                                                         |
+| Student   | `gpa-calculator`, `percentage-grade-calculator`, `word-counter`, `gpa-percentage-converter`, `date-difference-calculator`                                                                                                                                                                                                                                    |
+| Developer | `json-formatter`, `base64-encoder-decoder`, `uuid-generator`, `unix-timestamp-converter`, `regex-tester`, `csv-json-converter`, `json-to-typescript`, `url-encoder-decoder`, `html-entity-encoder-decoder`, `hash-generator`, `jwt-decoder`                                                                                                                  |
+| Text      | `text-case-converter`, `markdown-preview`, `text-diff-checker`                                                                                                                                                                                                                                                                                               |
+| Finance   | `compound-interest-calculator`, `loan-payment-calculator`, `percentage-calculator`                                                                                                                                                                                                                                                                           |
+| Time      | `time-zone-converter`, `business-days-calculator`                                                                                                                                                                                                                                                                                                            |
 
 Phase 7 added the last seven of each row. Notes on what they do and deliberately do not do:
 
@@ -219,6 +219,59 @@ two finance tools; no rates), `lib/isoDate` and `lib/parseDecimal` (reused).
   Years 1900–2100.
 - **Business Days** — Monday–Friday, no holidays (stated in the UI). Both ends included by default (like `NETWORKDAYS`); either can be
   excluded; reversed dates are swapped and flagged.
+
+## Phase 25 tools (Japan Money & Work Suite)
+
+Status: **implemented, not committed, not pushed, not deployed.** Three browser-only tools in the existing Japan category, on the
+**2026 (令和8年)** rules. Rule data: `apps/web/src/config/japanMoneyRules/`; calculations: `lib/japanTax.ts`, `lib/japanPayroll.ts`;
+shared "Sources and assumptions" block: `components/tool/SourcesAndAssumptions.tsx`. All are estimates; none is an official calculation.
+
+- **Japan Take-Home Pay Calculator** — monthly or annual gross salary, age 18–64, prefecture (Kyokai Kenpo rate), insurance toggles.
+  Employment income deduction (min ¥740,000, NTA No.1410), basic deduction (¥1.04M up to ¥4.89M, No.1199), income tax brackets plus
+  2.1 % reconstruction tax (No.2260), resident tax (10 %, ¥430,000 basic deduction, adjustment credit, ¥5,000 per capita), health
+  insurance + 0.23 % child support levy + 1.62 % care insurance (40–64), pension 9.15 % on grades up to ¥650,000, employment insurance 0.5 %.
+  Employee shares rounded 50 sen down / above up. Verified against the published grade tables and hand-derived examples.
+- **Japan Student Part-Time Work Limit Checker** — four separate systems, never one number: immigration (28 h/week all jobs; 8 h/day in a
+  school's long vacation for 留学; 家族滞在 28 h with no vacation exception; unrestricted statuses; permission required), tax lines
+  (resident tax ¥1.19M, own income tax ¥1.78M, 勤労学生 ¥1.63M, tax dependant ¥1.36M, 特定親族特別控除 ¥1.97M for 19–22), health-insurance
+  dependant (< ¥1.3M, < ¥1.5M for 19–22) and a note that employer social insurance excludes students (¥88,000 wage test ended 2026-10-01).
+- **Japan Furusato Nozei Limit Estimator** — 総務省 formula: limit = resident income tax × 20 % ÷ (90 % − rate × 1.021) + ¥2,000, rate bracket
+  from Sakai City's published table (inclusive bounds), taxable income after social insurance, optional spouse (¥620,000 income test),
+  dependants (general, 19–22) and other deductions.
+
+Related links are curated and reciprocal (take-home ↔ percentage, currency, consumption tax, student, furusato; student ↔ furusato;
+student and furusato ↔ percentage).
+
+**Not modelled, by design:** bonuses (insurance on bonuses differs), dependants and other deductions in take-home pay, company health
+societies, local per-capita add-ons (e.g. +¥300 Osaka Pref., +¥500 Kagoshima Pref.) and lower resident-tax exemption limits in 2nd/3rd-grade
+municipalities, ages 65+, self-employment, home loan deduction, one-stop furusato treatment, elderly/disabled dependants and
+single-parent or working-student deductions in the furusato estimate.
+
+**Rounding and the salary table (verified against the NTA's 令和8年分 material).** Salary → employment income uses NTA No.1410 and, below
+¥6.6M, the ¥4,000-bucket table; all 1,080 rows read from the NTA's 令和8年分 table (年末調整のしかた, pages 47–54) match the code
+(`lib/fixtures/nta2026SalaryIncomeTable.ts`, tested in `lib/japanTax.test.ts`). Income tax follows the NTA year-end adjustment procedure:
+taxable income rounded down to ¥1,000 → tax from the quick-reference table → × 102.1% (reconstruction tax included) → the result
+rounded down to ¥100. It is the full-year amount; monthly withholding is settled at year-end adjustment and can differ.
+
+**Resident tax is a steady-state estimate.** Resident tax billed in a year generally reflects the previous year's income. The take-home tool
+has one salary input, so it applies the 令和9年度 rules (income earned in 2026) to that salary as if the same had been earned the year
+before. `PayrollResult.residentTaxModel` is `'steady-state'`, and the UI, assumptions, summary and FAQ say so. It is not the current
+year's actual bill; the municipality sets that.
+
+**Premiums are estimates of the employee share.** Health, child support levy and care insurance are summed before the half-share is
+rounded (50 sen or less down); pension and employment insurance are rounded the same way. A payslip can differ by about ¥1 a month per
+line. The tool does not reproduce any employer's payroll.
+
+**Student checker and social insurance.** Employer social insurance is shown as separate conditions, never as an income limit: scheduled
+20 hours a week at one employer (met at 20, not at 19.99), employer with 51+ employees (user-selected), not a student (an exclusion that
+stays in force whatever else is met), and the ¥88,000 monthly wage requirement, shown as **abolished on 2026-10-01** (Japan Pension
+Service). Pay is never compared with a social-insurance figure (tested for independence from income).
+
+**Remaining assumptions to re-check on audit:** (1) health, child support and care premiums are summed before rounding, where the published
+table lists them separately (±¥1 a month); (2) the ¥450,000 resident-tax exemption is the figure Nagoya City states, not a nationwide rule, and applies to a single person (a Hokkaido village page shows resident tax starting at a salary of ¥1.12M instead of ¥1.19M;
+municipality-specific limits are not modelled and the UI says so); (3) the ¥430,000 resident-tax basic deduction is confirmed by
+municipal pages for 令和9年度 (Tambasasayama, Nakasatsunai), not by a 総務省 page; (4) the 28-hour immigration rule is stated as the ISA
+words it ("1週"), without a claim about how a week is counted.
 
 ## Phase 23 tools and local discovery
 

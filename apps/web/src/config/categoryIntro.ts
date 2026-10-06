@@ -7,8 +7,8 @@ import type { CategoryId } from '@toolora/shared';
  */
 export const CATEGORY_INTRO: Partial<Record<CategoryId, readonly string[]>> = {
   japan: [
-    'Practical helpers for living, studying or working in Japan: convert between Western years and Japanese eras, work out an exact age, add or split out the 8% and 10% consumption tax, switch text between hiragana, katakana and full-width or half-width characters, and tidy postal codes and phone numbers into the formats forms expect.',
-    'Toolora is an independent site and is not connected to any government body. These tools do formatting and arithmetic only, so check official sources for anything that matters legally or financially.',
+    "Toolora's Japan tools cover practical calculations and everyday tasks for living, studying and working in Japan. For money and work, estimate take-home pay from a salary, check the separate work-hour, tax and insurance limits that apply to students, and estimate a furusato nozei donation limit. For everyday tasks, convert between Western years and Japanese eras, work out an exact age, add or split out the 8% and 10% consumption tax, switch text between hiragana, katakana and full-width or half-width characters, and tidy postal codes and phone numbers.",
+    'Toolora is an independent site and is not connected to any government body. The money and work tools are estimates built from published rules and say which year and sources they use. They are not official calculations or professional tax, legal or immigration advice, so check official sources for anything that matters.',
   ],
   currency: [
     'The Currency Converter turns one amount into another currency using daily reference exchange rates. Rates are published once a day, not live, and every result shows the rate date and where it came from.',

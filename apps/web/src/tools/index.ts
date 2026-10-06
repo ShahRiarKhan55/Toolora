@@ -30,6 +30,9 @@ import { content as percentageCalculatorContent } from './percentage-calculator/
 import { content as textDiffCheckerContent } from './text-diff-checker/content';
 import { content as hashGeneratorContent } from './hash-generator/content';
 import { content as jwtDecoderContent } from './jwt-decoder/content';
+import { content as japanTakeHomePayCalculatorContent } from './japan-take-home-pay-calculator/content';
+import { content as japanStudentWorkLimitCheckerContent } from './japan-student-work-limit-checker/content';
+import { content as japanFurusatoNozeiLimitEstimatorContent } from './japan-furusato-nozei-limit-estimator/content';
 import { variantContent } from './currency-converter/variantContent';
 import type { ToolContent, ToolImplementation } from './types';
 
@@ -277,6 +280,30 @@ export const TOOL_IMPLEMENTATIONS: Readonly<Record<string, ToolImplementation>> 
       })),
     ),
     content: jwtDecoderContent,
+  },
+  'japan-take-home-pay-calculator': {
+    Component: lazy(() =>
+      import('./japan-take-home-pay-calculator/JapanTakeHomePayCalculatorTool').then((m) => ({
+        default: m.JapanTakeHomePayCalculatorTool,
+      })),
+    ),
+    content: japanTakeHomePayCalculatorContent,
+  },
+  'japan-student-work-limit-checker': {
+    Component: lazy(() =>
+      import('./japan-student-work-limit-checker/JapanStudentWorkLimitCheckerTool').then((m) => ({
+        default: m.JapanStudentWorkLimitCheckerTool,
+      })),
+    ),
+    content: japanStudentWorkLimitCheckerContent,
+  },
+  'japan-furusato-nozei-limit-estimator': {
+    Component: lazy(() =>
+      import('./japan-furusato-nozei-limit-estimator/JapanFurusatoNozeiLimitEstimatorTool').then(
+        (m) => ({ default: m.JapanFurusatoNozeiLimitEstimatorTool }),
+      ),
+    ),
+    content: japanFurusatoNozeiLimitEstimatorContent,
   },
 };
 

@@ -252,7 +252,7 @@ const PHASE_23_TOOLS = {
 } as const;
 
 describe('Phase 23 tools', () => {
-  it('registers exactly six new local-only tools in their categories, at 31 tools in total', () => {
+  it('registers exactly six new local-only tools in their categories (31 tools at Phase 23, 34 with Phase 25)', () => {
     for (const [id, category] of Object.entries(PHASE_23_TOOLS)) {
       const tool = getToolBySlug(id);
       expect(tool?.id, id).toBe(id);
@@ -260,7 +260,7 @@ describe('Phase 23 tools', () => {
       expect(tool?.localOnly, id).toBe(true);
       expect(toolRoute(tool!.slug)).toBe('/tools/' + id);
     }
-    expect(TOOLS).toHaveLength(17 + 8 + 6);
+    expect(TOOLS).toHaveLength(17 + 8 + 6 + 3);
   });
 
   it('puts every new tool in the sitemap with distinct SEO text', () => {
@@ -285,10 +285,75 @@ describe('Phase 23 tools', () => {
       ['jwt-decoder', 'json-formatter'],
       ['kana-width-converter', 'japanese-postal-code-formatter'],
       ['kana-width-converter', 'japanese-phone-number-formatter'],
+      // Phase 25: the Japan money & work suite
+      ['japan-take-home-pay-calculator', 'percentage-calculator'],
+      ['japan-take-home-pay-calculator', 'currency-converter'],
+      ['japan-take-home-pay-calculator', 'japanese-consumption-tax-calculator'],
+      ['japan-student-work-limit-checker', 'japan-take-home-pay-calculator'],
+      ['japan-student-work-limit-checker', 'percentage-calculator'],
+      ['japan-furusato-nozei-limit-estimator', 'japan-take-home-pay-calculator'],
+      ['japan-furusato-nozei-limit-estimator', 'percentage-calculator'],
+      ['japan-student-work-limit-checker', 'japan-furusato-nozei-limit-estimator'],
     ] as const;
     for (const [a, b] of pairs) {
       expect(getToolBySlug(a)!.related, a + ' -> ' + b).toContain(b);
       expect(getToolBySlug(b)!.related, b + ' -> ' + a).toContain(a);
+    }
+  });
+});
+
+const PHASE_25_TOOLS = [
+  'japan-take-home-pay-calculator',
+  'japan-student-work-limit-checker',
+  'japan-furusato-nozei-limit-estimator',
+] as const;
+
+describe('Phase 25 tools (Japan Money & Work Suite)', () => {
+  it('registers three local-only tools in the existing Japan category, not a new one', () => {
+    for (const id of PHASE_25_TOOLS) {
+      const tool = getToolBySlug(id);
+      expect(tool?.id, id).toBe(id);
+      expect(tool?.slug, id).toBe(id);
+      expect(tool?.category, id).toBe('japan');
+      expect(tool?.localOnly, id).toBe(true);
+      expect(requiredAccess(tool!), id).toBe('public');
+      expect(toolRoute(id)).toBe('/tools/' + id);
+      expect(getToolsByCategory('japan').map((t) => t.id)).toContain(id);
+    }
+    expect(CATEGORIES.map((c) => c.id)).not.toContain('money');
+    expect(getPopulatedCategories()).toHaveLength(7); // still seven live categories
+  });
+
+  it('puts them in the sitemap through the registry, with distinct SEO text that is not "official"', () => {
+    const paths = getIndexableRoutes().map((r) => r.path);
+    for (const id of PHASE_25_TOOLS) {
+      const tool = getToolBySlug(id)!;
+      expect(paths).toContain('/tools/' + id);
+      expect(tool.seoTitle).toMatch(/— Toolora$/);
+      expect(tool.seoDescription).toMatch(/estimate|Educational|check/i);
+      expect(`${tool.name} ${tool.seoTitle} ${tool.seoDescription}`).not.toMatch(
+        /official government/i,
+      );
+    }
+  });
+
+  it('links the required related tools, and every pairing is reciprocal', () => {
+    const related = (id: string) => getToolBySlug(id)!.related ?? [];
+    // the three visible related links on the take-home page are the required ones
+    expect(related('japan-take-home-pay-calculator').slice(0, 3)).toEqual([
+      'percentage-calculator',
+      'currency-converter',
+      'japanese-consumption-tax-calculator',
+    ]);
+    for (const id of ['japan-student-work-limit-checker', 'japan-furusato-nozei-limit-estimator']) {
+      expect(related(id)).toContain('japan-take-home-pay-calculator');
+      expect(related(id)).toContain('percentage-calculator');
+    }
+    // reciprocity: anything a Phase 25 tool lists lists it back
+    for (const id of PHASE_25_TOOLS) {
+      for (const other of related(id)) {
+        expect(related(other), `${other} -> ${id}`).toContain(id);
+      }
     }
   });
 });

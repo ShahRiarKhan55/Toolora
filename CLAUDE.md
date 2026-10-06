@@ -15,30 +15,31 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 
 ## Status
 
-| Phase | Scope                                                                                    | State               |
-| ----- | ---------------------------------------------------------------------------------------- | ------------------- |
-| 0–1   | Analysis, monorepo, tooling, server skeleton                                             | done                |
-| 2     | Design system + app shell                                                                | done                |
-| 3     | Tool registry, routing, first 10 tools, client-side search                               | done                |
-| 4     | Product quality: related tools, category filter/discovery, content/a11y pass             | done                |
-| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots               | done                |
-| 6     | Production readiness: route focus/scroll, error boundary, target sizes                   | done                |
-| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone)    | done                |
-| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)                 | done                |
-| 9     | Discovery: curated `related` links, populated-only category links, concise home          | done                |
-| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests      | done                |
-| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)     | done                |
-| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)            | done                |
-| 13    | Full test pass, lint/build, UX/a11y/perf review                                          | done                |
-| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)     | done                |
-| 17    | Vercel deployment preparation (stateless Express function; not yet deployed)             | done                |
-| 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit     | done                |
-| 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy` | done                |
-| 20    | Currency category; historical rates researched and deferred (no suitable provider)       | done                |
-| 21    | 8 new tools; Text, Finance and Time categories; `react-markdown` for Markdown Preview    | done                |
-| 22    | Read-only product/SEO/docs audit (no code changes)                                       | done                |
-| 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros     | done, deployed      |
-| 24    | Read-only product strategy/architecture audit (no code changes)                          | done                |
+| Phase | Scope                                                                                     | State                                  |
+| ----- | ----------------------------------------------------------------------------------------- | -------------------------------------- |
+| 0–1   | Analysis, monorepo, tooling, server skeleton                                              | done                                   |
+| 2     | Design system + app shell                                                                 | done                                   |
+| 3     | Tool registry, routing, first 10 tools, client-side search                                | done                                   |
+| 4     | Product quality: related tools, category filter/discovery, content/a11y pass              | done                                   |
+| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots                | done                                   |
+| 6     | Production readiness: route focus/scroll, error boundary, target sizes                    | done                                   |
+| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone)     | done                                   |
+| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)                  | done                                   |
+| 9     | Discovery: curated `related` links, populated-only category links, concise home           | done                                   |
+| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests       | done                                   |
+| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)      | done                                   |
+| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)             | done                                   |
+| 13    | Full test pass, lint/build, UX/a11y/perf review                                           | done                                   |
+| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)      | done                                   |
+| 17    | Vercel deployment preparation (stateless Express function; not yet deployed)              | done                                   |
+| 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit      | done                                   |
+| 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy`  | done                                   |
+| 20    | Currency category; historical rates researched and deferred (no suitable provider)        | done                                   |
+| 21    | 8 new tools; Text, Finance and Time categories; `react-markdown` for Markdown Preview     | done                                   |
+| 22    | Read-only product/SEO/docs audit (no code changes)                                        | done                                   |
+| 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros      | done, deployed                         |
+| 24    | Read-only product strategy/architecture audit (no code changes)                           | done                                   |
+| 25    | Japan Money & Work Suite: take-home pay, student work limits, furusato nozei (2026 rules) | implemented, uncommitted, not deployed |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -47,10 +48,11 @@ stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, l
 `/tools`, category cross-links, a heading-outline fix on the empty states, and expanded navigation/
 accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
 phases land. Production (https://toolora-smoky.vercel.app) runs the Phase 23 build, commit `78ef05c`: 31 tools,
-7 live categories, 44 sitemap URLs, accounts disabled.
+7 live categories, 44 sitemap URLs, accounts disabled. Phase 25 adds three Japan tools (34 tools, 47 sitemap URLs) and
+is **implemented in the working tree only**: not committed, not pushed, not deployed.
 
-The app now has real routes (`react-router-dom`), a working tool registry with all 31 tools (10 MVP, 7 from Phase 7, 8 from Phase 21,
-6 from Phase 23), and a
+The app now has real routes (`react-router-dom`), a working tool registry with all 34 tools (10 MVP, 7 from Phase 7, 8 from Phase 21,
+6 from Phase 23, 3 from Phase 25), and a
 client-side search over it (`apps/web/src/lib/searchTools.ts`). Phase 5 added the SEO foundation
 (see "SEO principles"): every page sets canonical/OG/Twitter/robots tags and JSON-LD client-side
 (`useDocumentMeta`), and the server generates `sitemap.xml`/`robots.txt` from the registry. Phase 8 made
@@ -169,6 +171,21 @@ Recently used tools and favorites live in the visitor's `localStorage` (`apps/we
 against the registry on every read, are capped (5 recents), never reach the server, and must degrade silently when storage is
 blocked. This is the only thing Toolora writes to browser storage; do not extend it to tool input without the owner's approval.
 Header search (`components/layout/HeaderSearch.tsx`) reuses `searchTools`; there is no search endpoint.
+
+## Japan money rules (Phase 25)
+
+The take-home pay, furusato nozei and student work tools are estimates built on **versioned rule data**: `apps/web/src/config/japanMoneyRules/`
+(`rules.ts` numbers with their source, `sources.ts` what each official source establishes, shown on every tool page as "Sources and
+assumptions"). Calculations are in `lib/japanTax.ts` and `lib/japanPayroll.ts` (whole-yen integer arithmetic, rounding documented
+inline); the UI never holds a tax number. Income tax follows the NTA year-end adjustment procedure (taxable income down to ¥1,000, × 102.1%, final amount down to ¥100); resident tax is a
+**steady-state estimate** from the entered income (the real bill reflects the previous year) and must be labelled so; employer social insurance
+in the student checker is separate conditions with **no wage threshold** (the ¥88,000 requirement ended 2026-10-01). Rules: every result shows its rule year (`JAPAN_MONEY_RULE_YEAR_LABEL`, currently 2026 / 令和8年);
+nothing is fetched at runtime and there is no server endpoint; wording is "estimate", never "official", and never implies government
+affiliation or advice; the student checker keeps immigration, tax and insurance limits separate and must never collapse them into one
+number; salary and household inputs are never stored (the only browser storage is still the Phase 23 slug lists). **When a new
+year's rules are published, add a new rules version and bump the year; do not edit a number in place.** New numbers need an
+authoritative source (NTA, MHLW, JPS, ISA, 総務省 or a local government) read from the primary page, not a calculator site; if sources
+conflict or cannot be verified, ship less. Known limits are listed in `docs/tools.md`, "Phase 25 tools".
 
 ## Rules against fake functionality
 

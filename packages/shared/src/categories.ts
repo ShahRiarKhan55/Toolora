@@ -27,7 +27,7 @@ export const CATEGORIES: readonly Category[] = [
     id: 'japan',
     name: 'Japan',
     description:
-      'Era, age, consumption tax, kana, postal code and phone helpers for life, study and work in Japan.',
+      'Take-home pay, student work limits, furusato nozei, era, age, consumption tax, kana, postal code and phone helpers for life, study and work in Japan.',
   },
   {
     id: 'currency',

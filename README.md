@@ -1,19 +1,21 @@
 # Toolora
 
 Toolora is a multi-purpose web toolbox: free, genuinely useful online tools grouped into seven
-categories — **Japan** (era, age, consumption tax, kana and width, postal-code and phone-number tools),
+categories — **Japan** (take-home pay, student work limits, furusato nozei limit, era, age, consumption tax, kana and width, postal-code and phone-number tools),
 **Currency** (a currency converter on daily reference rates), **Student** (GPA, percentage/grade
 calculator, word counter, GPA ↔ percentage, date difference), **Developer** (JSON, Base64, URL and HTML
 entities, UUID, Unix timestamp, regex, CSV ↔ JSON, JSON → TypeScript, hash generator, JWT decoder),
 **Text** (case converter, Markdown preview, text diff), **Finance** (percentage, compound interest and
-loan payment calculators) and **Time** (time zone converter, business days). All 31 tools except the
+loan payment calculators) and **Time** (time zone converter, business days). All 34 tools except the
 Currency Converter run entirely in your browser, so your input is never sent anywhere; the converter
 fetches daily reference rates for the base currency only and never sends the amount.
 
 > **Status.** Production runs **Phase 23** (31 tools in 7 live categories; commit `78ef05c`; the production
 > sitemap lists 44 URLs) on Vercel at https://toolora-smoky.vercel.app. Phase 23 added six tools, header
 > search, recently used tools, favorites and richer category pages. Phase 24 was a read-only strategy audit
-> and changed nothing. There are no accounts (closed
+> and changed nothing. **Phase 25 (Japan Money & Work Suite: Take-Home Pay, Student Work Limit Checker and
+> Furusato Nozei Limit Estimator, 34 tools, 47 sitemap URLs) is implemented in the working tree only: not
+> committed, not pushed and not deployed**, so production still serves the Phase 23 build. There are no accounts (closed
 > via `ACCOUNTS_ENABLED`), payments, ads, analytics, PWA or AI features. See the status table in
 > [`CLAUDE.md`](./CLAUDE.md) and the registry/routing details in [`docs/tools.md`](./docs/tools.md).
 
