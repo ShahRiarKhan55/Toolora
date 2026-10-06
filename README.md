@@ -10,9 +10,10 @@ loan payment calculators) and **Time** (time zone converter, business days). All
 Currency Converter run entirely in your browser, so your input is never sent anywhere; the converter
 fetches daily reference rates for the base currency only and never sends the amount.
 
-> **Status.** Production runs Phase 21 (25 tools; commit `f618b3b`) on Vercel at
-> https://toolora-smoky.vercel.app. **Phase 23** (six new tools, header search, recently used tools,
-> favorites, richer category pages) is implemented but **not deployed**. There are no accounts (closed
+> **Status.** Production runs **Phase 23** (31 tools in 7 live categories; commit `78ef05c`; the production
+> sitemap lists 44 URLs) on Vercel at https://toolora-smoky.vercel.app. Phase 23 added six tools, header
+> search, recently used tools, favorites and richer category pages. Phase 24 was a read-only strategy audit
+> and changed nothing. There are no accounts (closed
 > via `ACCOUNTS_ENABLED`), payments, ads, analytics, PWA or AI features. See the status table in
 > [`CLAUDE.md`](./CLAUDE.md) and the registry/routing details in [`docs/tools.md`](./docs/tools.md).
 

@@ -37,7 +37,8 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 20    | Currency category; historical rates researched and deferred (no suitable provider)       | done                |
 | 21    | 8 new tools; Text, Finance and Time categories; `react-markdown` for Markdown Preview    | done                |
 | 22    | Read-only product/SEO/docs audit (no code changes)                                       | done                |
-| 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros     | built, not deployed |
+| 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros     | done, deployed      |
+| 24    | Read-only product strategy/architecture audit (no code changes)                          | done                |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -45,7 +46,8 @@ stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, l
 (not part of that original 3–7 merge): a deterministic related-tools system, category filtering on
 `/tools`, category cross-links, a heading-outline fix on the empty states, and expanded navigation/
 accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
-phases land.
+phases land. Production (https://toolora-smoky.vercel.app) runs the Phase 23 build, commit `78ef05c`: 31 tools,
+7 live categories, 44 sitemap URLs, accounts disabled.
 
 The app now has real routes (`react-router-dom`), a working tool registry with all 31 tools (10 MVP, 7 from Phase 7, 8 from Phase 21,
 6 from Phase 23), and a
