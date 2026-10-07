@@ -6,7 +6,7 @@ earlier phase, kept for context).
 
 **Current state (Phase 27, 2026-10-07):** 34 tools in 7 populated categories (Japan, Currency, Student, Developer, Text, Finance,
 Time; the `ai` category exists in the type but is empty and excluded from navigation and the sitemap), 47 sitemap URLs. Production
-runs commit `fe25bc3` on Vercel. Accounts are disabled; nothing is persisted server-side; there are no analytics, ads, payments,
+runs code commit `d02f10b` (Phase 27) on Vercel. Accounts are disabled; nothing is persisted server-side; there are no analytics, ads, payments,
 PWA, Google Sign-In or AI features.
 
 ## Goals that drive the design
@@ -492,30 +492,38 @@ geolocation=(), payment=()`; `Referrer-Policy: no-referrer`; `X-Content-Type-Opt
   separate lint/typecheck/test jobs: they would repeat the same work. The first run on GitHub's Linux runner is the first time the
   lockfile is exercised with `npm ci` on Linux; fix forward if it surfaces anything.
 
-## 10. Function region: evaluation (Phase 27: moved from `iad1` to `hnd1` after a Git-deployed measurement)
+## 10. Function region (Phase 27: moved from `iad1` to `hnd1`, closed)
 
-**Facts (verified 2026-10-07).** The Vercel project's function region is `iad1` (Washington, D.C.), no failover. Static assets
-come from the CDN edge in the visitor's region (Osaka, `kix1`, in these tests); HTML is deliberately **not** static (per-route SEO
-injection), so every page load makes a round trip from the edge to `iad1`. Region is a function setting, changeable without code
-(`"regions": ["hnd1"]` in `vercel.json`, or Project Settings → Functions).
+**Current state.** Function region is `hnd1` (Tokyo), configured by `"regions": ["hnd1"]` in `vercel.json` (commit `d02f10b`) and
+confirmed by the deployment's `regions` and the `x-vercel-id` response header. No Vercel dashboard or API setting was changed for this.
+Before Phase 27 the region was `iad1` (Washington, D.C.).
 
-**Measured from Japan (`curl`, 5 runs, uncached HTML, 2026-10-07):** HTML TTFB 236–289 ms; hashed JS asset TTFB 53–80 ms (edge);
-`/api/currency/rates` 60–82 ms when the CDN cache hits and ~590 ms on a miss (function in `iad1` plus the upstream provider call).
-The upstream provider (open.er-api.com) answered in ~130 ms from Japan; it was not measured from `iad1`.
+**Why it matters.** Static assets come from the CDN edge in the visitor's region (Osaka, `kix1`, in these tests). HTML is deliberately
+**not** static (per-route SEO injection), so every document load makes a round trip from the edge to the function; `/api/currency/rates`
+is served from the CDN cache when it hits.
 
-**Assessment.** A Tokyo function (`hnd1`) would remove most of the ~170 ms HTML gap for Japanese visitors, and also helps
-Bangladeshi visitors (closer to Tokyo than to Washington) on the currency pages; HTML TTFB is a real, repeated cost on every
-navigation that reloads the document. It would not change the asset times. Currency misses would speed up only if the providers are
-nearer Tokyo than Washington, which is unmeasured. Because Toolora is **stateless** there is no database to keep close to the
-function, so a region move is safe, cheap and reversible today; the coupling only appears with the planned Postgres, where the
-function region must be chosen together with the database region (and a function far from its database costs far more than a
-function far from the user).
+**Measured from one machine in Japan, 2026-10-07** (`curl` time-to-first-byte, 8 samples per request, same endpoints and method for
+both runs, settled samples only: cold-start outliers right after a deploy were excluded):
 
-**Original decision (superseded: the move was made once deploying was approved; `vercel.json` now sets `"regions": ["hnd1"]`).** Not changed in the first Phase 27 commit: a region change takes effect only on a new deployment, Phase 27 forbids deploying, and
-without a Preview/Production deployment there is no way to verify it. The change is one line and the evidence above supports it, so
-the recommendation is to set `"regions": ["hnd1"]` in the next deploying phase, re-measure the same five HTML requests and the
-currency miss, and keep it only if HTML TTFB drops. If Postgres is added, choose its region at the same time (a Tokyo or nearby
-Asia-Pacific region), not separately.
+| Request                | Historical baseline: `iad1` | `hnd1` (current) |
+| ---------------------- | --------------------------: | ---------------: |
+| Home HTML              |                  229–254 ms |        75–107 ms |
+| Ordinary tool HTML     |                  222–277 ms |        82–112 ms |
+| Japan tool HTML        |                  223–253 ms |        77–111 ms |
+| Hashed JS asset        |                    51–79 ms |         53–93 ms |
+| Currency API cache hit |                    44–75 ms |         47–86 ms |
+
+(An earlier, rougher `iad1` run with 5 samples gave HTML 236–289 ms, JS 53–80 ms, currency hit 60–82 ms and a currency cache **miss**
+of about 590 ms; it is consistent with the table.)
+
+**Conclusion.** `hnd1` substantially reduced server-rendered HTML latency from Japan (the ranges do not overlap). Hashed JS stayed
+edge-served and shows no meaningful region effect; currency cache-hit latency is broadly similar. The measured improvement is
+specifically for the HTML/function path, not for every request. Currency **cache-miss** latency was not measured after the move, so no
+improvement is claimed there. `hnd1` is retained. Limits: one machine, one network, one day.
+
+**Stateless today, coupled later.** Toolora has no database, so the function region has no data to be near. When Postgres is added,
+choose the function region and the database region together (a function far from its database costs far more than one far from the
+user). Bangladeshi visitors are also closer to Tokyo than to Washington, but that was not measured.
 
 ## 11. Measurement without tracking (Phase 27, decision: **Option A, analytics-free**)
 

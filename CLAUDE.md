@@ -15,33 +15,33 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 
 ## Status
 
-| Phase | Scope                                                                                     | State                                  |
-| ----- | ----------------------------------------------------------------------------------------- | -------------------------------------- |
-| 0–1   | Analysis, monorepo, tooling, server skeleton                                              | done                                   |
-| 2     | Design system + app shell                                                                 | done                                   |
-| 3     | Tool registry, routing, first 10 tools, client-side search                                | done                                   |
-| 4     | Product quality: related tools, category filter/discovery, content/a11y pass              | done                                   |
-| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots                | done                                   |
-| 6     | Production readiness: route focus/scroll, error boundary, target sizes                    | done                                   |
-| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone)     | done                                   |
-| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)                  | done                                   |
-| 9     | Discovery: curated `related` links, populated-only category links, concise home           | done                                   |
-| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests       | done                                   |
-| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)      | done                                   |
-| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)             | done                                   |
-| 13    | Full test pass, lint/build, UX/a11y/perf review                                           | done                                   |
-| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)      | done                                   |
-| 17    | Vercel deployment preparation (stateless Express function)                                | done, deployed                         |
-| 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit      | done                                   |
-| 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy`  | done                                   |
-| 20    | Currency category; historical rates researched and deferred (no suitable provider)        | done                                   |
-| 21    | 8 new tools; Text, Finance and Time categories; `react-markdown` for Markdown Preview     | done                                   |
-| 22    | Read-only product/SEO/docs audit (no code changes)                                        | done                                   |
-| 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros      | done, deployed                         |
-| 24    | Read-only product strategy/architecture audit (no code changes)                           | done                                   |
-| 25    | Japan Money & Work Suite: take-home pay, student work limits, furusato nozei (2026 rules) | done, deployed (`fe25bc3`)             |
-| 26    | Read-only production audit (no code changes)                                              | done                                   |
-| 27    | Docs truth, GitHub Actions CI, Privacy page accuracy, region + measurement decisions      | implemented, uncommitted, not deployed |
+| Phase | Scope                                                                                     | State                      |
+| ----- | ----------------------------------------------------------------------------------------- | -------------------------- |
+| 0–1   | Analysis, monorepo, tooling, server skeleton                                              | done                       |
+| 2     | Design system + app shell                                                                 | done                       |
+| 3     | Tool registry, routing, first 10 tools, client-side search                                | done                       |
+| 4     | Product quality: related tools, category filter/discovery, content/a11y pass              | done                       |
+| 5     | SEO foundation: canonical/OG/Twitter/robots meta, JSON-LD, sitemap, robots                | done                       |
+| 6     | Production readiness: route focus/scroll, error boundary, target sizes                    | done                       |
+| 7     | Tool expansion: 7 new tools (regex, CSV↔JSON, JSON→TS, GPA↔%, dates, JP postal/phone)     | done                       |
+| 8     | Server-side injection of per-route tags into `index.html` (SPA delivery)                  | done                       |
+| 9     | Discovery: curated `related` links, populated-only category links, concise home           | done                       |
+| 10    | Production hardening: cache headers, Permissions-Policy, prod HTTP regression tests       | done                       |
+| 11    | Accounts/entitlements boundary (access levels, server decision seam; no enforcement)      | done                       |
+| 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)             | done                       |
+| 13    | Full test pass, lint/build, UX/a11y/perf review                                           | done                       |
+| 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)      | done                       |
+| 17    | Vercel deployment preparation (stateless Express function)                                | done, deployed             |
+| 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit      | done                       |
+| 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy`  | done                       |
+| 20    | Currency category; historical rates researched and deferred (no suitable provider)        | done                       |
+| 21    | 8 new tools; Text, Finance and Time categories; `react-markdown` for Markdown Preview     | done                       |
+| 22    | Read-only product/SEO/docs audit (no code changes)                                        | done                       |
+| 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros      | done, deployed             |
+| 24    | Read-only product strategy/architecture audit (no code changes)                           | done                       |
+| 25    | Japan Money & Work Suite: take-home pay, student work limits, furusato nozei (2026 rules) | done, deployed (`fe25bc3`) |
+| 26    | Read-only production audit (no code changes)                                              | done                       |
+| 27    | Docs truth, GitHub Actions CI, Privacy page accuracy, region + measurement decisions      | done, deployed (`d02f10b`) |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -50,9 +50,9 @@ stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, l
 `/tools`, category cross-links, a heading-outline fix on the empty states, and expanded navigation/
 accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
 phases land. Production (https://toolora-smoky.vercel.app, Vercel project `toolora`, deployed from `main` on the GitHub
-remote `ShahRiarKhan55/Toolora`) runs the Phase 25 build, commit `fe25bc3`: 34 tools, 7 live categories (the AI category is empty and
+remote `ShahRiarKhan55/Toolora`) runs the Phase 27 build (Phase 25 product), code commit `d02f10b`: 34 tools, 7 live categories (the AI category is empty and
 excluded), 47 sitemap URLs, accounts disabled. **Not implemented:** Google Sign-In, accounts, PWA, payments/Stripe, subscriptions, AI
-tools, Postgres, saved scenarios or history, analytics, ads. Phase 27 (docs, CI, Privacy wording) is in the working tree only.
+tools, Postgres, saved scenarios or history, analytics, ads. Phase 27 (docs, CI, Privacy wording, Tokyo region) is closed and deployed.
 
 The app now has real routes (`react-router-dom`), a working tool registry with all 34 tools (10 MVP, 7 from Phase 7, 8 from Phase 21,
 6 from Phase 23, 3 from Phase 25), and a
@@ -247,7 +247,7 @@ only), and recent/favorite tool slugs sit in localStorage.
 `.github/workflows/ci.yml` runs `npm ci`, `npm run check` and `npm run build:vercel` on every push and pull request (Node from `.nvmrc`,
 no secrets). It never deploys: Vercel's GitHub integration deploys `main` to Production and other branches to Previews, so there is no
 manual deploy command. `VITE_PUBLIC_SITE_URL` is Production-scoped only. Function region is `hnd1` (Tokyo), set by `regions` in `vercel.json`
-(was `iad1`; evidence in `docs/architecture.md`, 10). Live project facts: `docs/deployment.md`.
+(was `iad1`; measured results in `docs/architecture.md`, 10). Live project facts: `docs/deployment.md`.
 
 ## Production serving (Phase 10)
 

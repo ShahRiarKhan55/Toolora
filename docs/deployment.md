@@ -12,7 +12,7 @@ invented or committed as a placeholder.
 | Vercel project                        | `toolora` (team `shahriarkhan55s-projects`, Hobby plan), root directory `.`                                                                                            |
 | Git remote                            | https://github.com/ShahRiarKhan55/Toolora; Vercel's GitHub integration is linked                                                                                       |
 | Production branch                     | `main`. A push to `main` deploys to Production; a push to any other branch deploys a Preview                                                                           |
-| Production build                      | commit `fe25bc3` (Phase 25): 34 tools, 47 sitemap URLs                                                                                                                 |
+| Production build                      | code commit `d02f10b` (Phase 27; product as Phase 25): 34 tools, 47 sitemap URLs                                                                                       |
 | Build command                         | `npm run build:vercel` (also in `vercel.json`); install command and output directory are Vercel's defaults                                                             |
 | Runtime                               | Node 24.x, framework preset Express, Fluid compute; function region **`hnd1`** (Tokyo) via `regions` in `vercel.json` (was `iad1` until Phase 27), no failover regions |
 | Environment vars                      | One: `VITE_PUBLIC_SITE_URL`, scope **Production only**. Nothing else is set (no `DATABASE_URL`, no secrets, no provider keys)                                          |
@@ -37,7 +37,7 @@ Deployment is Git-driven. **There is no manual deploy step and CI never deploys.
    Use it to eyeball a change; remember it has no `VITE_PUBLIC_SITE_URL`.
 6. **Production** — merge or push to `main`. Vercel builds and promotes it automatically (about 30 s). Do not run `vercel --prod`.
 7. **Verify Production** — `https://toolora-smoky.vercel.app/api/health` returns 200 `{status:"ok", database:"not-used"}`;
-   `/sitemap.xml` lists the expected number of URLs (47 at `fe25bc3`); a tool page's view-source shows its own `<title>` and
+   `/sitemap.xml` lists the expected number of URLs (47 at Phase 27); a tool page's view-source shows its own `<title>` and
    canonical; `/api/currency/rates?base=JPY&symbols=BDT` returns rates. `vercel inspect <url>` shows the commit a deployment was
    built from. Rollback: promote an earlier deployment in the Vercel dashboard.
 

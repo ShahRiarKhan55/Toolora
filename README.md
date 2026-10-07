@@ -10,7 +10,7 @@ loan payment calculators) and **Time** (time zone converter, business days). All
 Currency Converter run entirely in your browser, so your input is never sent anywhere; the converter
 fetches daily reference rates for the base currency only and never sends the amount.
 
-> **Status.** Production runs **Phase 25** (34 tools in 7 live categories; commit `fe25bc3`; the sitemap lists
+> **Status.** Production runs **Phase 27** (34 tools in 7 live categories, the Phase 25 product plus a Tokyo function region; code commit `d02f10b`; the sitemap lists
 > 47 URLs) on Vercel at https://toolora-smoky.vercel.app, deployed from `main` on GitHub. Phase 25 added the Japan
 > Take-Home Pay Calculator, Student Work Limit Checker and Furusato Nozei Limit Estimator. **Not implemented:** accounts
 > (closed via `ACCOUNTS_ENABLED`), Google Sign-In, PWA, payments, ads, analytics and AI features. See the status table in
