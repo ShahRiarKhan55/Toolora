@@ -1,0 +1,29 @@
+name: CI
+
+# Quality gate only. Deployment is Vercel's Git integration; this workflow never deploys and uses no secrets.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # format:check + lint + typecheck + test + build (everything deterministic, no browser needed)
+      - run: npm run check
+      # the exact command Vercel runs; also copies the web build into public/
+      - run: npm run build:vercel

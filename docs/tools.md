@@ -222,7 +222,7 @@ two finance tools; no rates), `lib/isoDate` and `lib/parseDecimal` (reused).
 
 ## Phase 25 tools (Japan Money & Work Suite)
 
-Status: **implemented, not committed, not pushed, not deployed.** Three browser-only tools in the existing Japan category, on the
+Status: **done, deployed to production (commit `fe25bc3`).** Three browser-only tools in the existing Japan category, on the
 **2026 (令和8年)** rules. Rule data: `apps/web/src/config/japanMoneyRules/`; calculations: `lib/japanTax.ts`, `lib/japanPayroll.ts`;
 shared "Sources and assumptions" block: `components/tool/SourcesAndAssumptions.tsx`. All are estimates; none is an official calculation.
 

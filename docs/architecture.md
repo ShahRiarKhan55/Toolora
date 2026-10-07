@@ -1,7 +1,13 @@
 # Architecture
 
 This document explains how Toolora is put together and **why**. For day-to-day rules see `CLAUDE.md`.
-Items marked _(planned)_ are designed but not built yet.
+Items marked _(planned)_ are designed but not built yet. Numbers are labelled **measured** (with the date) or **historical** (an
+earlier phase, kept for context).
+
+**Current state (Phase 27, 2026-10-07):** 34 tools in 7 populated categories (Japan, Currency, Student, Developer, Text, Finance,
+Time; the `ai` category exists in the type but is empty and excluded from navigation and the sitemap), 47 sitemap URLs. Production
+runs commit `fe25bc3` on Vercel. Accounts are disabled; nothing is persisted server-side; there are no analytics, ads, payments,
+PWA, Google Sign-In or AI features.
 
 ## Goals that drive the design
 
@@ -20,11 +26,11 @@ Items marked _(planned)_ are designed but not built yet.
                         │        ▲                                                            │
                         │        └── registry metadata (from packages/shared)                 │
                         └───────────────┬─────────────────────────────────────────────────────┘
-                                        │ only for static assets, /api/health, and (planned) HTML
+                                        │ static, HTML+SEO tags, /api/health, /api/currency/rates
                                         ▼
                         ┌────────────────────────────── server ───────────────────────────────┐
                         │  apps/server (Express 5)                                            │
-                        │   /api/*  health (+ future features)                                │
+                        │   /api/health, /api/currency/rates                                  │
                         │   /sitemap.xml, /robots.txt (from the registry)                       │
                         │   serve SPA, inject per-route SEO tags                              │
                         │   Prisma 7 ─► SQLite (User, Session)                                │
@@ -33,8 +39,9 @@ Items marked _(planned)_ are designed but not built yet.
            packages/shared: registry metadata, SEO helpers, constants — imported by both apps
 ```
 
-Tool input never crosses the browser→server boundary. The server exists for delivery (HTML/SEO),
-operations (health) and future features that genuinely need persistence.
+Tool input never crosses the browser→server boundary. The server exists for delivery (HTML/SEO), operations (health), the
+currency-rates API (the one tool that is not `localOnly`: only the base currency is requested, never the amount) and the closed
+accounts feature. Production holds no application data.
 
 ## Workspaces
 
@@ -73,19 +80,19 @@ interface ToolMeta {
   slug: string; // URL segment → /tools/<slug> (flat, not nested under the category)
   name: string;
   description: string; // card text
-  category: 'japan' | 'student' | 'developer' | 'ai';
+  category: CategoryId; // 'japan' | 'currency' | 'student' | 'developer' | 'text' | 'finance' | 'time' | 'ai'
   icon: ToolIconId; // identifier resolved by apps/web/src/config/toolPresentation.ts
   keywords: readonly string[]; // search synonyms ("jpy", "gpa", "epoch", …)
   seoTitle: string;
   seoDescription: string;
-  localOnly: boolean; // true for every current tool
+  localOnly: boolean; // true for every tool except the Currency Converter
   order: number; // manual ordering within a category and in "All tools"
 }
 ```
 
 The route is **derived** by a helper (`toolRoute`/`categoryRoute`), not stored, so it cannot drift from
 the slug/category id. `apps/web/src/tools/index.ts` maps `id` → a lazily-loaded component (a hand-written
-map of ten `import()` calls, not `import.meta.glob` — simple enough not to need the extra indirection at
+map of one `import()` per tool, 34 today, not `import.meta.glob` — simple enough not to need the extra indirection at
 this scale) plus its `content`; `registry.test.ts` fails if a registry entry has no implementation or an
 implementation has no entry. Cards, category pages, search and per-route document title/description all
 read this one list; the sitemap, `robots.txt` and per-route SEO tags are generated from it too.
@@ -166,7 +173,7 @@ search, origin)` mirrors the router for the server. In production `createApp({ w
   footer survive). It catches render errors and failed lazy tool chunks and shows an announced
   `Alert` with a reload button instead of a blank page. It logs to the browser console only.
 - **Target size.** Footer and breadcrumb links are `min-h-11` (they were ~20px tall).
-- **Audit results, no change needed:** the main bundle is ~97 kB gzip (React + React Router + app
+- **Audit results, no change needed (historical, Phase 6):** the main bundle was ~97 kB gzip (React + React Router + app
   shell and every tool's static copy, ~14 kB of source); each tool is its own 1–5 kB chunk; fonts are
   system fonts; the web build emits no source maps (the server bundle's map is not served); no
   horizontal overflow from 320 px to 1440 px.
@@ -191,8 +198,8 @@ search, origin)` mirrors the router for the server. In production `createApp({ w
 
 ### 6. Database
 
-Prisma 7 + SQLite via `@prisma/adapter-better-sqlite3`. Every tool runs in the browser and stores
-nothing; the only models are `User` and `Session` (Phase 12, see 6b), created by the migration in
+Prisma 7 + SQLite via `@prisma/adapter-better-sqlite3`. **Production does not use it** (accounts are disabled; see
+`docs/deployment.md`). Every tool runs in the browser and stores nothing; the only models are `User` and `Session` (Phase 12, see 6b), created by the migration in
 `prisma/migrations/`. Apply migrations with `npm run db:deploy` (`db:migrate` is the dev-time
 equivalent that also generates new ones). `/api/health` runs `SELECT 1` through the real adapter. Server
 tests build an in-memory database from the real migration files (`apps/server/tests/migratedDb.ts`), so
@@ -447,9 +454,11 @@ See `CLAUDE.md` → "Pinned toolchain choices" for TypeScript 6 (not 7), Prisma 
 
 Route-level and tool-level code splitting (each tool is its own chunk, verified in the Phase 3 build —
 typically 1–5 kB gzip per tool); no UI kit; Tailwind emits only used classes; no third-party network
-requests; all tool work is local computation. Current baseline (Phase 3): main web JS ≈ 96 kB gzip
-(React 19 + React Router + the app shell + registry), CSS ≈ 5 kB gzip, server bundle ≈ 9 kB (plus
-external dependencies).
+requests; all tool work is local computation. Historical baseline (Phase 3): main web JS ≈ 96 kB gzip, CSS ≈ 5 kB gzip, server bundle ≈ 9 kB.
+**Measured 2026-10-07 (Phase 27, `npm run build`, 34 tools):** main web JS 403 kB raw / 124 kB gzip (it also holds every tool's
+static copy and the registry; the tools themselves are separate chunks, the largest being Markdown Preview at 119 kB raw because of
+`react-markdown`), CSS 30 kB raw. The earlier "main JS ≈ 390 kB raw, ~121 kB gzip" figure in the README predates Phase 25. Lazy-loading each
+tool's `content` (noted in Phase 7) is the next lever if the main chunk keeps growing.
 
 #### Currency Converter UI _(Phase 19)_
 
@@ -463,3 +472,77 @@ from its cache (the rate date is unaffected). ExchangeRate-API's attribution lin
 supplied the rate the UI names it instead and mentions the primary. Display metadata (name, symbol) is in
 `CURRENCY_INFO` (shared); there are deliberately no flags (EUR spans countries; Windows renders no flag emoji). The picker
 is a native `<select>` (type-ahead by code, best mobile/a11y behaviour). Variant pages: see `docs/tools.md`.
+
+## Delivery, security headers and testing (current)
+
+- **Security headers** (measured on production 2026-10-07, HTML and API responses from Express/helmet): CSP `default-src 'self'`
+  with `script-src 'self'`, `script-src-attr 'none'`, `object-src 'none'`, `frame-ancestors 'self'`, `form-action 'self'` (no `connect-src`, so
+  `fetch` can only reach the origin; `style-src` allows `https:` and `'unsafe-inline'`); HSTS 1 year with `includeSubDomains`;
+  `Cross-Origin-Opener-Policy: same-origin`; `Cross-Origin-Resource-Policy: same-origin`; `Permissions-Policy: camera=(), microphone=(),
+geolocation=(), payment=()`; `Referrer-Policy: no-referrer`; `X-Content-Type-Options: nosniff`; `X-Frame-Options: SAMEORIGIN`. No CORS
+  headers, no cookies. Static `/assets/*` is served by Vercel's CDN with an immutable year-long cache and only HSTS (Helmet does not
+  run there); HTML is `no-cache`.
+- **Persistence.** Server: none in production. Browser: `localStorage` holds only recent/favorite tool slugs (Phase 23).
+- **Tests.** Vitest 5 projects `web` (jsdom), `server` (node), `shared` (node): 121 files, 1,549 tests at Phase 27, all run by
+  `npm run check`. Production-header behaviour is covered by `apps/server/tests/production.test.ts`. Real-browser validation (headless
+  Edge over the Chrome DevTools Protocol: layout at 320/390/1440 px, console, storage, cookies) is a manual local step, not part of
+  CI, because it needs a local browser and the built server.
+- **CI.** `.github/workflows/ci.yml` runs `npm ci`, `npm run check` and `npm run build:vercel` on every push and pull request
+  (Node from `.nvmrc`, no secrets, no deploy). `check` already contains format, lint, typecheck, tests and build, so there are no
+  separate lint/typecheck/test jobs: they would repeat the same work. The first run on GitHub's Linux runner is the first time the
+  lockfile is exercised with `npm ci` on Linux; fix forward if it surfaces anything.
+
+## 10. Function region: evaluation (Phase 27, decision: leave `iad1`, revisit with the database)
+
+**Facts (verified 2026-10-07).** The Vercel project's function region is `iad1` (Washington, D.C.), no failover. Static assets
+come from the CDN edge in the visitor's region (Osaka, `kix1`, in these tests); HTML is deliberately **not** static (per-route SEO
+injection), so every page load makes a round trip from the edge to `iad1`. Region is a function setting, changeable without code
+(`"regions": ["hnd1"]` in `vercel.json`, or Project Settings → Functions).
+
+**Measured from Japan (`curl`, 5 runs, uncached HTML, 2026-10-07):** HTML TTFB 236–289 ms; hashed JS asset TTFB 53–80 ms (edge);
+`/api/currency/rates` 60–82 ms when the CDN cache hits and ~590 ms on a miss (function in `iad1` plus the upstream provider call).
+The upstream provider (open.er-api.com) answered in ~130 ms from Japan; it was not measured from `iad1`.
+
+**Assessment.** A Tokyo function (`hnd1`) would remove most of the ~170 ms HTML gap for Japanese visitors, and also helps
+Bangladeshi visitors (closer to Tokyo than to Washington) on the currency pages; HTML TTFB is a real, repeated cost on every
+navigation that reloads the document. It would not change the asset times. Currency misses would speed up only if the providers are
+nearer Tokyo than Washington, which is unmeasured. Because Toolora is **stateless** there is no database to keep close to the
+function, so a region move is safe, cheap and reversible today; the coupling only appears with the planned Postgres, where the
+function region must be chosen together with the database region (and a function far from its database costs far more than a
+function far from the user).
+
+**Decision.** Not changed in Phase 27: a region change takes effect only on a new deployment, Phase 27 forbids deploying, and
+without a Preview/Production deployment there is no way to verify it. The change is one line and the evidence above supports it, so
+the recommendation is to set `"regions": ["hnd1"]` in the next deploying phase, re-measure the same five HTML requests and the
+currency miss, and keep it only if HTML TTFB drops. If Postgres is added, choose its region at the same time (a Tokyo or nearby
+Asia-Pacific region), not separately.
+
+## 11. Measurement without tracking (Phase 27, decision: **Option A, analytics-free**)
+
+**Decision.** Toolora collects **no usage analytics**: no page or tool counters, no first-party event endpoint, no third-party
+script. This matches the product promise (privacy-first, no tracking), the Privacy page (which says so) and the CSP (`script-src
+'self'`, no analytics origin). Option B (minimal first-party aggregate counts) is not adopted.
+
+**Why.** There is no concrete decision today that counts would change: the catalogue is small and the roadmap is set by search demand
+and owner judgement, not by funnel data. Even an "anonymous" counter needs an endpoint that receives a request per visit (an IP,
+a path and a time reach the server and the platform), a retention rule, a policy line and abuse protection, and it undermines the
+claim that visiting a tool sends nothing. The cost is small but real; the benefit is hypothetical.
+
+**How quality is judged instead (no user tracking, no new service required):**
+
+- **Search Console / Bing Webmaster Tools** (owner-run, needs the domain verified; requires a custom domain to be meaningful):
+  indexed pages, impressions and queries per tool page. This is the closest thing to "which tools matter" and involves no
+  visitor data in Toolora.
+- **Vercel's own infrastructure metrics** (already collected by the host; request counts, errors, function duration per deployment
+  in the dashboard). Vercel Web Analytics and Speed Insights are **not enabled** and stay off.
+- **Synthetic checks**: `npm run check`, the CI gate, the headless-browser pass before a release, and `curl` timing like section 10.
+- **Correctness**: the tests themselves (every tool ships normal/edge/invalid/boundary cases) and the sources panel on Japan money
+  tools, which makes wrong numbers easy to report.
+- **Direct feedback**: the Contact page (once `CONTACT_EMAIL` is set) and GitHub issues.
+
+**If this is ever revisited** (a stated, concrete need such as deciding which tools to deepen): the minimum acceptable dataset is a
+daily integer count per `(date, tool slug)` incremented by a same-origin `POST` with no body, no cookie, no identifier, no IP
+or user-agent stored (not even in logs; `requestLogger` already omits them), no referrer, no query string, and never any input
+values; retention 400 days of aggregate rows, nothing finer; the Privacy page and this section updated before it ships; an
+owner decision first. Anything involving session replay, fingerprinting, cross-site identifiers, ad IDs or Google Analytics is out
+of scope for the product.

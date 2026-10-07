@@ -21,9 +21,27 @@ export function PrivacyPage() {
             What you type into the tools
           </h2>
           <p className="mt-3">
-            Every tool runs in your browser. The text, numbers and files you enter are processed on
-            your device and are not sent to the Toolora server. They are not put in the page address
-            or saved in your browser by the tools.
+            Most tools run entirely in your browser. The text and numbers you enter are processed on
+            your device and are not sent to the Toolora server. Toolora does not store them, and the
+            tools do not put them in the page address or save them in your browser.
+          </p>
+          <p className="mt-3">
+            The one exception is the Currency Converter (and its JPY ↔ BDT pages). To show a rate,
+            your browser asks Toolora&apos;s server for daily exchange-rate data for the base
+            currency you picked, and the server in turn asks an exchange-rate provider. The amount
+            you type stays in your browser and is not part of that request.
+          </p>
+        </section>
+
+        <section aria-labelledby="privacy-storage">
+          <h2 id="privacy-storage" className={h2}>
+            What is saved in your browser
+          </h2>
+          <p className="mt-3">
+            Toolora remembers your recently used tools and favorites in your browser&apos;s local
+            storage, so they are there next time. Only the tool names (their page slugs) are saved,
+            never anything you entered. They stay on your device, are not sent to Toolora, and you
+            can remove them by clearing the site data in your browser.
           </p>
         </section>
 

@@ -62,7 +62,7 @@ export function AllToolsPage() {
       <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'All Tools' }]} />
       <PageHeader
         title="All Tools"
-        description={`${TOOLS.length} tools across ${categoryListText()} categories, all free and running in your browser.`}
+        description={`${TOOLS.length} tools across ${categoryListText()} categories, all free; nearly all run in your browser.`}
         className="mt-4"
       />
 

@@ -35,4 +35,12 @@ describe('privacy page content', () => {
     expect(screen.getByText(/public registration is disabled/i)).toBeInTheDocument();
     expect(screen.queryByText(/GDPR|CCPA|APPI|compliant/)).not.toBeInTheDocument();
   });
+
+  it('names the currency API exception and the stored tool slugs instead of claiming every tool is local', () => {
+    renderAt('/privacy');
+    expect(screen.queryByText(/every tool runs in your browser/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/the one exception is the currency converter/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /saved in your browser/i })).toBeInTheDocument();
+    expect(screen.getByText(/never anything you entered/i)).toBeInTheDocument();
+  });
 });

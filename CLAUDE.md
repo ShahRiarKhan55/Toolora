@@ -31,7 +31,7 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 12    | Accounts + authentication foundation (register/login/logout, cookie sessions)             | done                                   |
 | 13    | Full test pass, lint/build, UX/a11y/perf review                                           | done                                   |
 | 15    | Launch minimum: Privacy + Contact pages, public accounts closed (`ACCOUNTS_ENABLED`)      | done                                   |
-| 17    | Vercel deployment preparation (stateless Express function; not yet deployed)              | done                                   |
+| 17    | Vercel deployment preparation (stateless Express function)                                | done, deployed                         |
 | 18    | Dynamic data foundation: `/api/currency/rates`, provider fallback, cache, rate limit      | done                                   |
 | 19    | Currency 2.0: Currency Converter on the Phase 18 API, `/tools/jpy-to-bdt` + `bdt-to-jpy`  | done                                   |
 | 20    | Currency category; historical rates researched and deferred (no suitable provider)        | done                                   |
@@ -39,7 +39,9 @@ of these, or any paid service, without asking the owner first. Never deploy anyt
 | 22    | Read-only product/SEO/docs audit (no code changes)                                        | done                                   |
 | 23    | 6 new tools, header search, recent tools + favorites (localStorage), category intros      | done, deployed                         |
 | 24    | Read-only product strategy/architecture audit (no code changes)                           | done                                   |
-| 25    | Japan Money & Work Suite: take-home pay, student work limits, furusato nozei (2026 rules) | implemented, uncommitted, not deployed |
+| 25    | Japan Money & Work Suite: take-home pay, student work limits, furusato nozei (2026 rules) | done, deployed (`fe25bc3`)             |
+| 26    | Read-only production audit (no code changes)                                              | done                                   |
+| 27    | Docs truth, GitHub Actions CI, Privacy page accuracy, region + measurement decisions      | implemented, uncommitted, not deployed |
 
 Phase 3's brief absorbed what this table originally split across phases 3–7 (registry + routing, the
 Japan/Student/Developer tools, and client-side search), so those rows were merged rather than left
@@ -47,9 +49,10 @@ stale — see `docs/tools.md` for what actually landed. Phase 4 is a separate, l
 (not part of that original 3–7 merge): a deterministic related-tools system, category filtering on
 `/tools`, category cross-links, a heading-outline fix on the empty states, and expanded navigation/
 accessibility test coverage — see `docs/tools.md` ("Search", "Related tools"). Update this table as
-phases land. Production (https://toolora-smoky.vercel.app) runs the Phase 23 build, commit `78ef05c`: 31 tools,
-7 live categories, 44 sitemap URLs, accounts disabled. Phase 25 adds three Japan tools (34 tools, 47 sitemap URLs) and
-is **implemented in the working tree only**: not committed, not pushed, not deployed.
+phases land. Production (https://toolora-smoky.vercel.app, Vercel project `toolora`, deployed from `main` on the GitHub
+remote `ShahRiarKhan55/Toolora`) runs the Phase 25 build, commit `fe25bc3`: 34 tools, 7 live categories (the AI category is empty and
+excluded), 47 sitemap URLs, accounts disabled. **Not implemented:** Google Sign-In, accounts, PWA, payments/Stripe, subscriptions, AI
+tools, Postgres, saved scenarios or history, analytics, ads. Phase 27 (docs, CI, Privacy wording) is in the working tree only.
 
 The app now has real routes (`react-router-dom`), a working tool registry with all 34 tools (10 MVP, 7 from Phase 7, 8 from Phase 21,
 6 from Phase 23, 3 from Phase 25), and a
@@ -101,6 +104,7 @@ npm run format       prettier --write .   |   npm run format:check
 npm run typecheck    tsc for root + every workspace
 npm run build        server bundle (esbuild) + web bundle (Vite)
 npm run check        format:check + lint + typecheck + test + build  ← run before declaring done
+npm run build:vercel what Vercel runs (build + copy the web build to public/); CI runs it after check
 npm start            run the built server (node apps/server/dist/index.js)
 npm run db:generate  regenerate Prisma client     npm run db:migrate   create/apply a dev migration
 ```
@@ -198,7 +202,13 @@ conflict or cannot be verified, ship less. Known limits are listed in `docs/tool
 
 ## Privacy principles
 
-- Local tools (every tool in the registry: JSON, Base64, UUID, regex, CSV, TypeScript, dates, GPA, Japan formatters, ...) process input
+**Measurement decision (Phase 27): Toolora stays analytics-free.** No counters, no event endpoint, no third-party scripts, no Vercel Web
+Analytics/Speed Insights. Quality is judged from Search Console, host infrastructure metrics, synthetic checks and direct feedback.
+Any future first-party count needs the owner's explicit approval and the minimum dataset in `docs/architecture.md`, 11. The Privacy
+page must say exactly what is true: most tools are browser-only, the Currency Converter asks Toolora's server for rates (base currency
+only), and recent/favorite tool slugs sit in localStorage.
+
+- Local tools (every tool in the registry except the Currency Converter, which fetches rates for the base currency only) process input
   **in the browser only**. Never send tool input to the server; never put it in URLs or storage without
   the user asking. Say so in the UI where it reassures users.
 - Server logs contain method, path, status, duration and request id only — never query strings,
@@ -231,6 +241,13 @@ conflict or cannot be verified, ship less. Known limits are listed in `docs/tool
   served by `apps/server/src/routes/seo.ts`); never hand-list URLs. JSON-LD is `WebSite` (home) and
   `WebApplication` (tools) from registry data only — no ratings, reviews, prices or organization claims.
 - Lazy-load tools, keep bundles small, and keep layout stable (Core Web Vitals).
+
+## CI and deployment (Phase 27)
+
+`.github/workflows/ci.yml` runs `npm ci`, `npm run check` and `npm run build:vercel` on every push and pull request (Node from `.nvmrc`,
+no secrets). It never deploys: Vercel's GitHub integration deploys `main` to Production and other branches to Previews, so there is no
+manual deploy command. `VITE_PUBLIC_SITE_URL` is Production-scoped only. Function region is `iad1`; moving it to `hnd1` is recommended
+(evidence in `docs/architecture.md`, 10) but waits for an owner-approved deploy. Live project facts: `docs/deployment.md`.
 
 ## Production serving (Phase 10)
 

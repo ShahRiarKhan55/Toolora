@@ -20,7 +20,7 @@ export function ToolsSection() {
     <Section
       id="tools"
       title="Featured tools"
-      description="A few tools from each category, free and running in your browser."
+      description="A few free tools from each category; nearly all run in your browser."
       tone="muted"
     >
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
