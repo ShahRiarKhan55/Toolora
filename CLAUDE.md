@@ -246,8 +246,8 @@ only), and recent/favorite tool slugs sit in localStorage.
 
 `.github/workflows/ci.yml` runs `npm ci`, `npm run check` and `npm run build:vercel` on every push and pull request (Node from `.nvmrc`,
 no secrets). It never deploys: Vercel's GitHub integration deploys `main` to Production and other branches to Previews, so there is no
-manual deploy command. `VITE_PUBLIC_SITE_URL` is Production-scoped only. Function region is `iad1`; moving it to `hnd1` is recommended
-(evidence in `docs/architecture.md`, 10) but waits for an owner-approved deploy. Live project facts: `docs/deployment.md`.
+manual deploy command. `VITE_PUBLIC_SITE_URL` is Production-scoped only. Function region is `hnd1` (Tokyo), set by `regions` in `vercel.json`
+(was `iad1`; evidence in `docs/architecture.md`, 10). Live project facts: `docs/deployment.md`.
 
 ## Production serving (Phase 10)
 

@@ -492,7 +492,7 @@ geolocation=(), payment=()`; `Referrer-Policy: no-referrer`; `X-Content-Type-Opt
   separate lint/typecheck/test jobs: they would repeat the same work. The first run on GitHub's Linux runner is the first time the
   lockfile is exercised with `npm ci` on Linux; fix forward if it surfaces anything.
 
-## 10. Function region: evaluation (Phase 27, decision: leave `iad1`, revisit with the database)
+## 10. Function region: evaluation (Phase 27: moved from `iad1` to `hnd1` after a Git-deployed measurement)
 
 **Facts (verified 2026-10-07).** The Vercel project's function region is `iad1` (Washington, D.C.), no failover. Static assets
 come from the CDN edge in the visitor's region (Osaka, `kix1`, in these tests); HTML is deliberately **not** static (per-route SEO
@@ -511,7 +511,7 @@ function, so a region move is safe, cheap and reversible today; the coupling onl
 function region must be chosen together with the database region (and a function far from its database costs far more than a
 function far from the user).
 
-**Decision.** Not changed in Phase 27: a region change takes effect only on a new deployment, Phase 27 forbids deploying, and
+**Original decision (superseded: the move was made once deploying was approved; `vercel.json` now sets `"regions": ["hnd1"]`).** Not changed in the first Phase 27 commit: a region change takes effect only on a new deployment, Phase 27 forbids deploying, and
 without a Preview/Production deployment there is no way to verify it. The change is one line and the evidence above supports it, so
 the recommendation is to set `"regions": ["hnd1"]` in the next deploying phase, re-measure the same five HTML requests and the
 currency miss, and keep it only if HTML TTFB drops. If Postgres is added, choose its region at the same time (a Tokyo or nearby

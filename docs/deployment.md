@@ -6,18 +6,18 @@ invented or committed as a placeholder.
 
 ## Current state (verified 2026-10-07)
 
-| Item                                  | Value                                                                                                                                   |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Production URL                        | https://toolora-smoky.vercel.app (Vercel-provided domain; no custom domain)                                                             |
-| Vercel project                        | `toolora` (team `shahriarkhan55s-projects`, Hobby plan), root directory `.`                                                             |
-| Git remote                            | https://github.com/ShahRiarKhan55/Toolora; Vercel's GitHub integration is linked                                                        |
-| Production branch                     | `main`. A push to `main` deploys to Production; a push to any other branch deploys a Preview                                            |
-| Production build                      | commit `fe25bc3` (Phase 25): 34 tools, 47 sitemap URLs                                                                                  |
-| Build command                         | `npm run build:vercel` (also in `vercel.json`); install command and output directory are Vercel's defaults                              |
-| Runtime                               | Node 24.x, framework preset Express, Fluid compute; function region **`iad1`** (Washington, D.C.), no failover regions                  |
-| Environment vars                      | One: `VITE_PUBLIC_SITE_URL`, scope **Production only**. Nothing else is set (no `DATABASE_URL`, no secrets, no provider keys)           |
-| Vercel Web Analytics / Speed Insights | Not enabled (`features.webAnalytics: false`, Speed Insights has no data). See `docs/architecture.md`, 11                                |
-| Vercel CLI                            | Installed locally (62.2.0, `npm i -g vercel`, logged in); the project is linked in the git-ignored `.vercel/`. **Not needed to deploy** |
+| Item                                  | Value                                                                                                                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production URL                        | https://toolora-smoky.vercel.app (Vercel-provided domain; no custom domain)                                                                                            |
+| Vercel project                        | `toolora` (team `shahriarkhan55s-projects`, Hobby plan), root directory `.`                                                                                            |
+| Git remote                            | https://github.com/ShahRiarKhan55/Toolora; Vercel's GitHub integration is linked                                                                                       |
+| Production branch                     | `main`. A push to `main` deploys to Production; a push to any other branch deploys a Preview                                                                           |
+| Production build                      | commit `fe25bc3` (Phase 25): 34 tools, 47 sitemap URLs                                                                                                                 |
+| Build command                         | `npm run build:vercel` (also in `vercel.json`); install command and output directory are Vercel's defaults                                                             |
+| Runtime                               | Node 24.x, framework preset Express, Fluid compute; function region **`hnd1`** (Tokyo) via `regions` in `vercel.json` (was `iad1` until Phase 27), no failover regions |
+| Environment vars                      | One: `VITE_PUBLIC_SITE_URL`, scope **Production only**. Nothing else is set (no `DATABASE_URL`, no secrets, no provider keys)                                          |
+| Vercel Web Analytics / Speed Insights | Not enabled (`features.webAnalytics: false`, Speed Insights has no data). See `docs/architecture.md`, 11                                                               |
+| Vercel CLI                            | Installed locally (62.2.0, `npm i -g vercel`, logged in); the project is linked in the git-ignored `.vercel/`. **Not needed to deploy**                                |
 
 `VITE_PUBLIC_SITE_URL` is Production-only, so **Preview builds have no site origin**: relative canonicals, no JSON-LD and
 `/sitemap.xml` answers 404. That is correct for previews (they must not claim the production origin); do not copy the variable to
@@ -69,7 +69,7 @@ Repository root is the project root (the server needs `packages/shared` and the 
 | Persistent database      | None. Needed before accounts, saved data or payments (planned: Postgres, not started). Backups: none, because nothing is stored.                        |
 | Per-client rate limiting | Only needed if `ACCOUNTS_ENABLED` ever becomes `true` (see below). Must be in front of `/api/auth/*` first.                                             |
 | Monitoring               | `GET /api/health` is the probe target; no monitor is configured.                                                                                        |
-| Function region          | `iad1`, unchanged. Evaluation and recommendation: `docs/architecture.md`, 10.                                                                           |
+| Function region          | `hnd1`, set in `vercel.json`. Evaluation and measurements: `docs/architecture.md`, 10.                                                                  |
 | Self-hosting             | Possible (`npm run build`, `npm run db:deploy`, `NODE_ENV=production npm start`; see README) but not how Toolora runs.                                  |
 
 ## Accounts are closed at launch
